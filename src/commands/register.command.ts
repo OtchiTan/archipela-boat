@@ -1,14 +1,17 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import {
   Context,
   Options,
   SlashCommand,
   type SlashCommandContext,
 } from 'necord';
+import { ArchiClientsService } from 'src/archi-clients/archi-clients.service';
 import { RegisterDto } from './dto/register.dto';
 
 @Injectable()
 export class RegisterCommand {
+  constructor(@Inject() private archiClientsService: ArchiClientsService) {}
+
   @SlashCommand({
     name: 'register',
     description: 'Enregistre tes mondes pour le prochain archipelago',
@@ -37,6 +40,13 @@ export class RegisterCommand {
         ephemeral: true,
       });
     }
+
+    // Save the files to the database
+    await this.archiClientsService.create({
+      discord_id: interaction.user.id,
+      yaml: options.yaml.url,
+      apworld: options.apworld?.url,
+    });
 
     return interaction.reply({
       content: 'Mondes enregistrés! + ' + options.yaml?.name,

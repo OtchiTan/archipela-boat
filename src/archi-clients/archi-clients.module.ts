@@ -8,5 +8,6 @@ import { ArchiClient } from './entities/archi-client.entity';
   imports: [SequelizeModule.forFeature([ArchiClient])],
   controllers: [ArchiClientsController],
   providers: [ArchiClientsService],
+  exports: [ArchiClientsService],
 })
 export class ArchiClientsModule {}
