@@ -1,6 +1,13 @@
-import { Column, Model, Table } from 'sequelize-typescript';
+import {
+  BelongsTo,
+  Column,
+  ForeignKey,
+  Model,
+  Table,
+} from 'sequelize-typescript';
+import { ApEvent } from 'src/ap-events/entities/ap-events.entity';
 
-@Table({ tableName: 'archi_clients' })
+@Table({ tableName: 'ap_clients' })
 export class ApPlayer extends Model {
   @Column
   discord_id!: string;
@@ -10,4 +17,11 @@ export class ApPlayer extends Model {
 
   @Column({ allowNull: true })
   apworld?: string;
+
+  @ForeignKey(() => ApEvent)
+  @Column
+  eventId!: number;
+
+  @BelongsTo(() => ApEvent)
+  event!: ApEvent;
 }

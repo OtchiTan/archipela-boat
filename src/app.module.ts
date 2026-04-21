@@ -10,6 +10,7 @@ import { CommandsModule } from './commands/commands.module';
 import { RegisterCommand } from './commands/register.command';
 import { SetupApCommand } from './commands/setup-ap.command';
 import { dataBaseConfig } from './database.config';
+import { ApEventsModule } from './ap-events/ap-events.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { dataBaseConfig } from './database.config';
     SequelizeModule.forRoot(dataBaseConfig),
     CommandsModule,
     ApPlayersModule,
+    ApEventsModule,
   ],
   controllers: [AppController],
   providers: [AppService, RegisterCommand, SetupApCommand],
