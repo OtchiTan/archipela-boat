@@ -7,8 +7,7 @@ export class ApEventsController {
 
   @Get('/:id')
   async findOne(@Param('id') id: number) {
-    console.log('Getting event with id:', id);
-    return this.apEventsService.getEventById(id);
+    return this.apEventsService.findEvent({ id });
   }
 
   @Get()

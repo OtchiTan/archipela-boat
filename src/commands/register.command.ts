@@ -5,12 +5,16 @@ import {
   SlashCommand,
   type SlashCommandContext,
 } from 'necord';
+import { ApEventsService } from 'src/ap-events/ap-events.service';
 import { ApPlayersService } from 'src/ap-players/ap-players.service';
 import { RegisterDto } from './dto/register.dto';
 
 @Injectable()
 export class RegisterCommand {
-  constructor(@Inject() private apPlayersService: ApPlayersService) {}
+  constructor(
+    @Inject() private apPlayersService: ApPlayersService,
+    @Inject() private apEventsService: ApEventsService,
+  ) {}
 
   @SlashCommand({
     name: 'register',
@@ -30,10 +34,7 @@ export class RegisterCommand {
     }
 
     // Check if apworld file is provided and if it is a apworld file
-    if (
-      options.apworld !== undefined &&
-      !options.apworld.name.endsWith('.apworld')
-    ) {
+    if (options.apworld && !options.apworld.name.endsWith('.apworld')) {
       return interaction.reply({
         content:
           "Le fichier apworld fourni n'est pas un fichier apworld. Veuillez fournir un fichier .apworld valide.",
@@ -41,12 +42,27 @@ export class RegisterCommand {
       });
     }
 
+    const event = await this.apEventsService.findEvent({
+      channelId: interaction.channelId,
+    });
+
+    if (event === null) {
+      return interaction.reply({
+        content: 'Aucun événement trouvé pour ce channel.',
+        ephemeral: true,
+      });
+    }
+
     // Save the files to the database
-    await this.apPlayersService.create({
+    const player = await this.apPlayersService.create({
       discord_id: interaction.user.id,
       yaml: options.yaml.url,
       apworld: options.apworld?.url,
+      eventId: event.id as number,
     });
+
+    event.players?.push(player);
+    await this.apEventsService.updateEvent(event.id as number, event);
 
     return interaction.reply({
       content: 'Mondes enregistrés! + ' + options.yaml?.name,

@@ -15,10 +15,10 @@ export class ApEventsService {
     });
   }
 
-  async getEventById(eventId: number) {
+  async findEvent(filter: Partial<ApEvent>) {
     return await this.apEventRepository.findOne<ApEvent>({
-      where: { id: eventId },
-      raw: true,
+      where: filter,
+      include: [{ model: ApPlayer, as: 'players' }],
     });
   }
 
@@ -26,7 +26,7 @@ export class ApEventsService {
     const event = new ApEvent();
     event.channelId = channelId;
     const createdEvent = await this.apEventRepository.create(event as any);
-    return await this.getEventById(createdEvent.id);
+    return await this.findEvent({ id: createdEvent.id as number });
   }
 
   async updateEvent(eventId: number, data: Partial<ApEvent>) {

@@ -4,4 +4,6 @@ export class CreateApPlayerDto {
   yaml!: string;
 
   apworld?: string;
+
+  eventId!: number;
 }

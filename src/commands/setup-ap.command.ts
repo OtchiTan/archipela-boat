@@ -45,7 +45,7 @@ export class SetupApCommand {
     @Context() [interaction]: ButtonContext,
     @ComponentParam('eventId') eventId: number,
   ) {
-    const event = await this.apEventsService.getEventById(eventId);
+    const event = await this.apEventsService.findEvent({ id: eventId });
 
     if (event !== null) {
       event.startTime = new Date();
