@@ -1,4 +1,4 @@
-export class CreateArchiClientDto {
+export class CreateApPlayerDto {
   discord_id!: string;
 
   yaml!: string;

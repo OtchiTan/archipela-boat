@@ -5,7 +5,7 @@ import {
   SlashCommand,
   type SlashCommandContext,
 } from 'necord';
-import { ArchiClientsService } from 'src/archi-clients/archi-clients.service';
+import { ArchiClientsService } from 'src/ap-players/ap-players.service';
 import { RegisterDto } from './dto/register.dto';
 
 @Injectable()

@@ -1,7 +1,7 @@
 import { Column, Model, Table } from 'sequelize-typescript';
 
 @Table({ tableName: 'archi_clients' })
-export class ArchiClient extends Model {
+export class ApPlayer extends Model {
   @Column
   discord_id!: string;
 
