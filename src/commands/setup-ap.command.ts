@@ -5,21 +5,21 @@ import {
   SlashCommand,
   type SlashCommandContext,
 } from 'necord';
-import { ArchiClientsService } from 'src/ap-players/ap-players.service';
-import { SetupArchiDto } from './dto/setup-archi.dto';
+import { ApPlayersService } from 'src/ap-players/ap-players.service';
+import { SetupApDto } from './dto/setup-ap.dto';
 
 @Injectable()
-export class SetupArchiCommand {
-  constructor(@Inject() private archiClientsService: ArchiClientsService) {}
+export class SetupApCommand {
+  constructor(@Inject() private apPlayersService: ApPlayersService) {}
 
   @SlashCommand({
     name: 'setup-archi',
     description: 'Démarre un paramètres un Archipelago',
     defaultMemberPermissions: 'Administrator',
   })
-  public async onSetupArchi(
+  public async onSetupAp(
     @Context() [interaction]: SlashCommandContext,
-    @Options() options: SetupArchiDto,
+    @Options() options: SetupApDto,
   ) {
     return interaction.reply({
       content: 'Cette commande est en cours de développement.',

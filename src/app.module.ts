@@ -3,11 +3,12 @@ import { ConfigModule } from '@nestjs/config';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { IntentsBitField } from 'discord.js';
 import { NecordModule } from 'necord';
-import { ArchiClientsModule } from './ap-players/archi-clients.module';
+import { ApPlayersModule } from './ap-players/ap-players.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { CommandsModule } from './commands/commands.module';
 import { RegisterCommand } from './commands/register.command';
-import { SetupArchiCommand } from './commands/setup-archi.command';
+import { SetupApCommand } from './commands/setup-ap.command';
 import { dataBaseConfig } from './database.config';
 
 @Module({
@@ -19,9 +20,10 @@ import { dataBaseConfig } from './database.config';
       development: [process.env.DISCORD_DEVELOPMENT_GUILD_ID ?? ''],
     }),
     SequelizeModule.forRoot(dataBaseConfig),
-    ArchiClientsModule,
+    CommandsModule,
+    ApPlayersModule,
   ],
   controllers: [AppController],
-  providers: [AppService, RegisterCommand, SetupArchiCommand],
+  providers: [AppService, RegisterCommand, SetupApCommand],
 })
 export class AppModule {}

@@ -5,12 +5,12 @@ import {
   SlashCommand,
   type SlashCommandContext,
 } from 'necord';
-import { ArchiClientsService } from 'src/ap-players/ap-players.service';
+import { ApPlayersService } from 'src/ap-players/ap-players.service';
 import { RegisterDto } from './dto/register.dto';
 
 @Injectable()
 export class RegisterCommand {
-  constructor(@Inject() private archiClientsService: ArchiClientsService) {}
+  constructor(@Inject() private apPlayersService: ApPlayersService) {}
 
   @SlashCommand({
     name: 'register',
@@ -42,7 +42,7 @@ export class RegisterCommand {
     }
 
     // Save the files to the database
-    await this.archiClientsService.create({
+    await this.apPlayersService.create({
       discord_id: interaction.user.id,
       yaml: options.yaml.url,
       apworld: options.apworld?.url,
