@@ -1,23 +1,28 @@
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/sequelize';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { CreateApPlayerDto } from './dto/create-ap-players.dto';
 import { ApPlayer } from './entities/ap-players.entity';
 
 @Injectable()
 export class ApPlayersService {
   constructor(
-    @InjectModel(ApPlayer) private apPlayerRepository: typeof ApPlayer,
+    @InjectRepository(ApPlayer)
+    private apPlayerRepository: Repository<ApPlayer>,
   ) {}
 
   async findAll() {
-    return await this.apPlayerRepository.findAll();
+    return await this.apPlayerRepository.find({ relations: ['event'] });
   }
 
   async findOne(id: number) {
-    return await this.apPlayerRepository.findByPk(id);
+    return await this.apPlayerRepository.findOne({
+      where: { id },
+      relations: ['event'],
+    });
   }
 
   async create(createApPlayerDto: CreateApPlayerDto) {
-    return await this.apPlayerRepository.create(createApPlayerDto as any);
+    return await this.apPlayerRepository.save(createApPlayerDto);
   }
 }

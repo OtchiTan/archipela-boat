@@ -1,20 +1,30 @@
-import { Column, HasMany, Model, Table } from 'sequelize-typescript';
 import { ApPlayer } from 'src/ap-players/entities/ap-players.entity';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
-@Table({ tableName: 'ap_events' })
-export class ApEvent extends Model {
-  @Column
+@Entity()
+export class ApEvent {
+  @PrimaryGeneratedColumn()
+  id!: number;
+
+  @Column()
   channelId!: string;
 
-  @Column
-  messageId!: string;
+  @Column({ nullable: true })
+  messageId?: string;
 
-  @Column
+  @Column({ nullable: true })
   startTime?: Date;
 
-  @Column
+  @Column({ nullable: true })
   endTime?: Date;
 
-  @HasMany(() => ApPlayer)
+  @OneToMany(() => ApPlayer, (apPlayer) => apPlayer.event)
+  @JoinColumn()
   players!: ApPlayer[];
 }

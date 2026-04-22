@@ -1,27 +1,20 @@
-import {
-  BelongsTo,
-  Column,
-  ForeignKey,
-  Model,
-  Table,
-} from 'sequelize-typescript';
 import { ApEvent } from 'src/ap-events/entities/ap-events.entity';
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
-@Table({ tableName: 'ap_clients' })
-export class ApPlayer extends Model {
-  @Column
+@Entity()
+export class ApPlayer {
+  @PrimaryGeneratedColumn()
+  id!: number;
+
+  @Column()
   discord_id!: string;
 
-  @Column
+  @Column()
   yaml!: string;
 
-  @Column({ allowNull: true })
+  @Column({ nullable: true })
   apworld?: string;
 
-  @ForeignKey(() => ApEvent)
-  @Column
-  eventId!: number;
-
-  @BelongsTo(() => ApEvent)
+  @ManyToOne(() => ApEvent, (apEvent) => apEvent.players)
   event!: ApEvent;
 }

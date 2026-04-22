@@ -1,35 +1,34 @@
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/sequelize';
-import { ApPlayer } from 'src/ap-players/entities/ap-players.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { ApEvent } from './entities/ap-events.entity';
 
 @Injectable()
 export class ApEventsService {
   constructor(
-    @InjectModel(ApEvent) private apEventRepository: typeof ApEvent,
+    @InjectRepository(ApEvent) private apEventRepository: Repository<ApEvent>,
   ) {}
 
   async findAll() {
-    return await this.apEventRepository.findAll({
-      include: [{ model: ApPlayer, as: 'players' }],
+    return await this.apEventRepository.find({
+      relations: { players: true },
     });
   }
 
   async findEvent(filter: Partial<ApEvent>) {
-    return await this.apEventRepository.findOne<ApEvent>({
+    return await this.apEventRepository.findOne({
       where: filter,
-      include: [{ model: ApPlayer, as: 'players' }],
+      relations: { players: true },
     });
   }
 
   async createEvent(channelId: string) {
     const event = new ApEvent();
     event.channelId = channelId;
-    const createdEvent = await this.apEventRepository.create(event as any);
-    return await this.findEvent({ id: createdEvent.id as number });
+    return await this.apEventRepository.save(event);
   }
 
   async updateEvent(eventId: number, data: Partial<ApEvent>) {
-    await this.apEventRepository.update(data, { where: { id: eventId } });
+    await this.apEventRepository.update(eventId, data);
   }
 }
