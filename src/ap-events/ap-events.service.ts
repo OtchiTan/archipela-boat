@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { EntityNotFoundError, Repository } from 'typeorm';
 import { ApEvent } from './entities/ap-events.entity';
 
 @Injectable()
@@ -15,11 +15,15 @@ export class ApEventsService {
     });
   }
 
-  async findEvent(filter: Partial<ApEvent>) {
-    return await this.apEventRepository.findOne({
+  async findEvent(filter: Partial<ApEvent>): Promise<ApEvent> {
+    const event = await this.apEventRepository.findOne({
       where: filter,
       relations: { players: true },
     });
+    if (!event) {
+      throw new EntityNotFoundError(ApEvent, filter);
+    }
+    return event;
   }
 
   async createEvent(channelId: string) {
@@ -29,6 +33,7 @@ export class ApEventsService {
   }
 
   async updateEvent(eventId: number, data: Partial<ApEvent>) {
+    console.log('Updating event with ID:', eventId, 'Data:', data);
     await this.apEventRepository.update(eventId, data);
   }
 }

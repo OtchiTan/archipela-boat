@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { CreateApPlayerDto } from './dto/create-ap-players.dto';
+import { EntityNotFoundError, Repository } from 'typeorm';
 import { ApPlayer } from './entities/ap-players.entity';
 
 @Injectable()
@@ -15,14 +14,24 @@ export class ApPlayersService {
     return await this.apPlayerRepository.find({ relations: ['event'] });
   }
 
-  async findOne(id: number) {
-    return await this.apPlayerRepository.findOne({
-      where: { id },
+  async findOne(player: Partial<ApPlayer>): Promise<ApPlayer> {
+    const foundedPlayer = await this.apPlayerRepository.findOne({
+      where: player,
       relations: ['event'],
     });
+    if (!foundedPlayer) {
+      throw new EntityNotFoundError(ApPlayer, player);
+    }
+    return foundedPlayer;
   }
 
-  async create(createApPlayerDto: CreateApPlayerDto) {
-    return await this.apPlayerRepository.save(createApPlayerDto);
+  async create(player: Partial<ApPlayer>): Promise<ApPlayer> {
+    return await this.apPlayerRepository.save(player);
+  }
+
+  public async increaseDeathlinkCount(slot: string): Promise<void> {
+    const player = await this.findOne({ slot });
+    player.deathlinkCount += 1;
+    await this.apPlayerRepository.save(player);
   }
 }

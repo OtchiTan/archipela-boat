@@ -11,7 +11,7 @@ export class ApPlayersController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.apPlayersService.findOne(+id);
+  findOne(@Param('id') id: number) {
+    return this.apPlayersService.findOne({ id });
   }
 }

@@ -19,6 +19,9 @@ export class ApEvent {
   messageId?: string;
 
   @Column({ nullable: true })
+  url?: string;
+
+  @Column({ nullable: true })
   startTime?: Date;
 
   @Column({ nullable: true })

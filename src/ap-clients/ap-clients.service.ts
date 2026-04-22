@@ -1,16 +1,15 @@
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
+import { Inject, Injectable } from '@nestjs/common';
 import { Client } from 'archipelago.js';
-import { IsNull, Repository } from 'typeorm';
+import { ApEventsService } from 'src/ap-events/ap-events.service';
+import { ApPlayersService } from 'src/ap-players/ap-players.service';
 import { LoginDto } from './dto/login.dto';
-import { ApClient } from './entities/ap-clients.entity';
 
 @Injectable()
 export class ApClientsService {
   public client?: Client;
   constructor(
-    @InjectRepository(ApClient)
-    private readonly apClientRepository: Repository<ApClient>,
+    @Inject() private readonly apEventsService: ApEventsService,
+    @Inject() private readonly apPlayersService: ApPlayersService,
   ) {
     this.connectClient().catch((err) => {
       console.error('Failed to connect to AP client:', err);
@@ -18,9 +17,10 @@ export class ApClientsService {
   }
 
   public async login(loginDto: LoginDto) {
-    await this.apClientRepository.save({
+    const event = await this.apEventsService.findEvent({});
+
+    await this.apEventsService.updateEvent(event?.id, {
       url: loginDto.url,
-      slot: loginDto.slot,
     });
 
     if (this.client === undefined) {
@@ -28,22 +28,18 @@ export class ApClientsService {
     }
   }
 
-  async getCurrentApClient(): Promise<ApClient | null> {
-    return await this.apClientRepository.findOne({
-      where: { endTime: IsNull() },
-      order: { id: 'DESC' },
-    });
-  }
-
   async connectClient() {
-    const apClient = await this.getCurrentApClient();
-
-    if (!apClient) {
-      return;
-    }
+    const apEvent = await this.apEventsService.findEvent({});
 
     this.client = new Client();
 
-    await this.client.login(apClient.url, apClient.slot);
+    await this.client.login(apEvent.url ?? '', apEvent.players[0].slot ?? '');
+    this.client.deathLink.enableDeathLink();
+
+    this.client.deathLink.on('deathReceived', (slot) => {
+      this.apPlayersService.increaseDeathlinkCount(slot).catch((err) => {
+        throw err;
+      });
+    });
   }
 }

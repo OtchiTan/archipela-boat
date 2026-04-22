@@ -54,15 +54,12 @@ export class RegisterCommand {
     }
 
     // Save the files to the database
-    const player = await this.apPlayersService.create({
+    await this.apPlayersService.create({
       discord_id: interaction.user.id,
       yaml: options.yaml.url,
       apworld: options.apworld?.url,
-      eventId: event.id,
+      event: event,
     });
-
-    event.players?.push(player);
-    await this.apEventsService.updateEvent(event.id, event);
 
     return interaction.reply({
       content: 'Mondes enregistrés! + ' + options.yaml?.name,

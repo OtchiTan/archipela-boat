@@ -15,6 +15,12 @@ export class ApPlayer {
   @Column({ nullable: true })
   apworld?: string;
 
+  @Column({ nullable: true })
+  slot?: string;
+
+  @Column({ default: 0 })
+  deathlinkCount!: number;
+
   @ManyToOne(() => ApEvent, (apEvent) => apEvent.players)
   event!: ApEvent;
 }
