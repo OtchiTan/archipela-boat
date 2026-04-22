@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Client } from 'archipelago.js';
-import { IsNull, Not, Repository } from 'typeorm';
+import { IsNull, Repository } from 'typeorm';
 import { LoginDto } from './dto/login.dto';
 import { ApClient } from './entities/ap-clients.entity';
 
@@ -30,7 +30,7 @@ export class ApClientsService {
 
   async getCurrentApClient(): Promise<ApClient | null> {
     return await this.apClientRepository.findOne({
-      where: { endTime: Not(IsNull()) },
+      where: { endTime: IsNull() },
       order: { id: 'DESC' },
     });
   }
@@ -45,24 +45,5 @@ export class ApClientsService {
     this.client = new Client();
 
     await this.client.login(apClient.url, apClient.slot);
-  }
-
-  public async switchDeathlink(slot: string) {
-    const apClient = await this.getCurrentApClient();
-
-    if (!apClient) {
-      return;
-    }
-
-    const client = new Client();
-    await client.login(apClient.url, slot);
-
-    if (this.client) {
-      if (this.client.deathLink.enabled) {
-        this.client.deathLink.disableDeathLink();
-      } else {
-        this.client.deathLink.enableDeathLink();
-      }
-    }
   }
 }

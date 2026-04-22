@@ -1,4 +1,4 @@
-import { Body, Controller, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Post } from '@nestjs/common';
 import { ApClientsService } from './ap-clients.service';
 import { LoginDto } from './dto/login.dto';
 
@@ -9,10 +9,5 @@ export class ApClientsController {
   @Post('login')
   public async login(@Body() loginDto: LoginDto) {
     await this.apClientsService.login(loginDto);
-  }
-
-  @Patch('switch-deathlink')
-  public async switchDeathlink(@Body() body: { slot: string }) {
-    await this.apClientsService.switchDeathlink(body.slot);
   }
 }
