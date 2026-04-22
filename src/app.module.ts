@@ -10,6 +10,7 @@ import { AppService } from './app.service';
 import { CommandsModule } from './commands/commands.module';
 import { RegisterCommand } from './commands/register.command';
 import { SetupApCommand } from './commands/setup-ap.command';
+import { ApClientsModule } from './ap-clients/ap-clients.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { SetupApCommand } from './commands/setup-ap.command';
     CommandsModule,
     ApPlayersModule,
     ApEventsModule,
+    ApClientsModule,
   ],
   controllers: [AppController],
   providers: [AppService, RegisterCommand, SetupApCommand],
