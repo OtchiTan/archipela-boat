@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityNotFoundError, Repository } from 'typeorm';
-import { ApPlayer } from './entities/ap-players.entity';
+import { ApPlayer } from './ap-players.entity';
 
 @Injectable()
 export class ApPlayersService {
@@ -27,6 +27,11 @@ export class ApPlayersService {
 
   async create(player: Partial<ApPlayer>): Promise<ApPlayer> {
     return await this.apPlayerRepository.save(player);
+  }
+
+  async update(id: number, player: Partial<ApPlayer>): Promise<ApPlayer> {
+    await this.apPlayerRepository.update(id, player);
+    return await this.findOne({ id });
   }
 
   public async increaseDeathlinkCount(slot: string): Promise<void> {

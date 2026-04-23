@@ -1,4 +1,6 @@
+import { HttpService } from '@nestjs/axios';
 import { Inject, Injectable } from '@nestjs/common';
+import { existsSync, mkdirSync, writeFileSync } from 'fs';
 import {
   Context,
   Options,
@@ -7,6 +9,7 @@ import {
 } from 'necord';
 import { ApEventsService } from 'src/ap-events/ap-events.service';
 import { ApPlayersService } from 'src/ap-players/ap-players.service';
+import { parse as yamlParse } from 'yaml';
 import { RegisterDto } from './dto/register.dto';
 
 @Injectable()
@@ -14,6 +17,7 @@ export class RegisterCommand {
   constructor(
     @Inject() private apPlayersService: ApPlayersService,
     @Inject() private apEventsService: ApEventsService,
+    private readonly httpService: HttpService,
   ) {}
 
   @SlashCommand({
@@ -53,13 +57,43 @@ export class RegisterCommand {
       });
     }
 
-    // Save the files to the database
-    await this.apPlayersService.create({
-      discord_id: interaction.user.id,
-      yaml: options.yaml.url,
-      apworld: options.apworld?.url,
-      event: event,
-    });
+    const { data } = await this.httpService.axiosRef.get<string>(
+      options.yaml.url,
+    );
+
+    const folderPath = `./.tmp/${event.id}/${interaction.user.id}/`;
+
+    if (!existsSync(folderPath)) {
+      mkdirSync(folderPath, { recursive: true });
+    }
+    const filePath = `${folderPath}${options.yaml.name}`;
+
+    const isExistingFile = existsSync(filePath);
+
+    writeFileSync(filePath, data);
+
+    const yaml = yamlParse(data) as Record<string, any>;
+
+    if (isExistingFile) {
+      const apPlayer = await this.apPlayersService.findOne({
+        slot: yaml.name as string,
+        event: event,
+        discord_id: interaction.user.id,
+      });
+
+      apPlayer.apworld = options.apworld?.url;
+
+      await this.apPlayersService.update(apPlayer.id, apPlayer);
+    } else {
+      // Save the files to the database
+      await this.apPlayersService.create({
+        discord_id: interaction.user.id,
+        yaml: filePath,
+        apworld: options.apworld?.url,
+        event: event,
+        slot: yaml.name as string,
+      });
+    }
 
     return interaction.reply({
       content: 'Mondes enregistrés! + ' + options.yaml?.name,

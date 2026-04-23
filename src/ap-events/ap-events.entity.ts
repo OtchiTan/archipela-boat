@@ -1,4 +1,4 @@
-import { ApPlayer } from 'src/ap-players/entities/ap-players.entity';
+import { ApPlayer } from 'src/ap-players/ap-players.entity';
 import {
   Column,
   Entity,

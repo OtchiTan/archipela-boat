@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityNotFoundError, Repository } from 'typeorm';
-import { ApEvent } from './entities/ap-events.entity';
+import { ApEvent } from './ap-events.entity';
 
 @Injectable()
 export class ApEventsService {

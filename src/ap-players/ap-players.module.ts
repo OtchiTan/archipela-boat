@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ApPlayersController } from './ap-players.controller';
+import { ApPlayer } from './ap-players.entity';
 import { ApPlayersService } from './ap-players.service';
-import { ApPlayer } from './entities/ap-players.entity';
 
 @Module({
   imports: [TypeOrmModule.forFeature([ApPlayer])],

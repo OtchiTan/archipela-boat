@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ApEventsController } from './ap-events.controller';
+import { ApEvent } from './ap-events.entity';
 import { ApEventsService } from './ap-events.service';
-import { ApEvent } from './entities/ap-events.entity';
 
 @Module({
   imports: [TypeOrmModule.forFeature([ApEvent])],

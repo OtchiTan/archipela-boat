@@ -1,4 +1,4 @@
-import { ApEvent } from 'src/ap-events/entities/ap-events.entity';
+import { ApEvent } from 'src/ap-events/ap-events.entity';
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()

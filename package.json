@@ -20,6 +20,7 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
+    "@nestjs/axios": "^4.0.1",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.4",
     "@nestjs/core": "^11.0.1",
@@ -28,6 +29,7 @@
     "@nestjs/swagger": "^11.4.1",
     "@nestjs/typeorm": "^11.0.1",
     "archipelago.js": "^2.1.0",
+    "axios": "^1.15.2",
     "discord.js": "^14.26.3",
     "necord": "^6.12.4",
     "reflect-metadata": "^0.2.2",
