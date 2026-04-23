@@ -19,7 +19,7 @@ import { CommandsModule } from './commands/commands.module';
     }),
     TypeOrmModule.forRoot({
       type: 'sqlite',
-      database: '.db/archipela-boat',
+      database: '.db/archipela-boat.db',
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: true,
     }),
