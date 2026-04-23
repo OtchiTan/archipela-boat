@@ -3,7 +3,6 @@ import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { IntentsBitField } from 'discord.js';
 import { NecordModule } from 'necord';
-import { ApClientsModule } from './ap-clients/ap-clients.module';
 import { ApEventsModule } from './ap-events/ap-events.module';
 import { ApPlayersModule } from './ap-players/ap-players.module';
 import { AppController } from './app.controller';
@@ -27,7 +26,6 @@ import { CommandsModule } from './commands/commands.module';
     CommandsModule,
     ApPlayersModule,
     ApEventsModule,
-    ApClientsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

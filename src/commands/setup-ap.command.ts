@@ -1,14 +1,16 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
+import { EmbedBuilder } from 'discord.js';
 import {
   Button,
   type ButtonContext,
   ComponentParam,
   Context,
+  Options,
   SlashCommand,
   type SlashCommandContext,
 } from 'necord';
 import { ApEventsService } from 'src/ap-events/ap-events.service';
+import { SetupApDto } from './dto/setup-ap.dto';
 
 @Injectable()
 export class SetupApCommand {
@@ -19,19 +21,23 @@ export class SetupApCommand {
     description: 'Démarre un paramètres un Archipelago',
     defaultMemberPermissions: 'Administrator',
   })
-  public async onSetupAp(@Context() [interaction]: SlashCommandContext) {
-    const event = await this.apEventsService.createEvent(interaction.channelId);
-
-    const start = new ButtonBuilder()
-      .setCustomId('start/' + event?.id)
-      .setLabel('Start')
-      .setStyle(ButtonStyle.Primary);
-
-    const row = new ActionRowBuilder<ButtonBuilder>().addComponents(start);
+  public async onSetupAp(
+    @Context() [interaction]: SlashCommandContext,
+    @Options() options: SetupApDto,
+  ) {
+    const event = await this.apEventsService.createEvent({
+      channelId: interaction.channelId,
+      name: options.name,
+    });
 
     const result = await interaction.reply({
-      content: `Nouvel événement créé dans ce channel <#${event?.channelId}>`,
-      components: [row],
+      embeds: [
+        new EmbedBuilder()
+          .setTitle(`:island: ${options.name} :island:`)
+          .setColor(0x000000)
+          .setTimestamp(new Date())
+          .setDescription(`:busts_in_silhouette: 0 personne inscrite`),
+      ],
     });
 
     if (event !== null) {

@@ -12,6 +12,9 @@ export class ApEvent {
   @PrimaryGeneratedColumn()
   id!: number;
 
+  @Column({ unique: true })
+  name!: string;
+
   @Column()
   channelId!: string;
 

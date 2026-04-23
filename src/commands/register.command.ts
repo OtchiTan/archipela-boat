@@ -95,6 +95,18 @@ export class RegisterCommand {
       });
     }
 
+    const message = await interaction.channel?.messages.fetch(event.messageId!);
+
+    if (message) {
+      console.log(message);
+      const newEmbed = message.embeds[0];
+      newEmbed.fields.push({
+        name: interaction.user.username,
+        value: 'Wouit',
+      });
+      await message.edit({ embeds: [newEmbed] });
+    }
+
     return interaction.reply({
       content: 'Mondes enregistrés! + ' + options.yaml?.name,
     });

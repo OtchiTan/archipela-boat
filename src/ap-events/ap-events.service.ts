@@ -1,13 +1,31 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
+import { ModuleRef } from '@nestjs/core';
 import { InjectRepository } from '@nestjs/typeorm';
-import { EntityNotFoundError, Repository } from 'typeorm';
+import { ApPlayersService } from 'src/ap-players/ap-players.service';
+import { EntityNotFoundError, IsNull, Not, Repository } from 'typeorm';
+import { ApClient } from './ap-client';
 import { ApEvent } from './ap-events.entity';
+import { LoginDto } from './dto/login.dto';
 
 @Injectable()
-export class ApEventsService {
+export class ApEventsService implements OnModuleInit {
+  apClients: Map<string, ApClient> = new Map();
+
   constructor(
     @InjectRepository(ApEvent) private apEventRepository: Repository<ApEvent>,
+    @Inject() private apPlayersService: ApPlayersService,
+    private moduleRef: ModuleRef,
   ) {}
+
+  async onModuleInit() {
+    const events = await this.apEventRepository.find({
+      where: { url: Not(IsNull()), endTime: Not(IsNull()) },
+    });
+
+    for (const event of events) {
+      await this.startNewApClient(event.url!);
+    }
+  }
 
   async findAll() {
     return await this.apEventRepository.find({
@@ -26,14 +44,28 @@ export class ApEventsService {
     return event;
   }
 
-  async createEvent(channelId: string) {
-    const event = new ApEvent();
-    event.channelId = channelId;
+  async createEvent(event: Partial<ApEvent>): Promise<ApEvent> {
     return await this.apEventRepository.save(event);
   }
 
   async updateEvent(eventId: number, data: Partial<ApEvent>) {
     console.log('Updating event with ID:', eventId, 'Data:', data);
     await this.apEventRepository.update(eventId, data);
+  }
+
+  public async login(loginDto: LoginDto) {
+    const event = await this.findEvent({});
+
+    await this.updateEvent(event?.id, {
+      url: loginDto.url,
+    });
+
+    await this.startNewApClient(loginDto.url);
+  }
+
+  async startNewApClient(url: string) {
+    const apClient = new ApClient(this, this.apPlayersService);
+    this.apClients.set(url, apClient);
+    await apClient.connectClient(url);
   }
 }

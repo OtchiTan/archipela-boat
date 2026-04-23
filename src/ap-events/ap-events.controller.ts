@@ -1,5 +1,6 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { ApEventsService } from './ap-events.service';
+import { LoginDto } from './dto/login.dto';
 
 @Controller('ap-events')
 export class ApEventsController {
@@ -13,5 +14,10 @@ export class ApEventsController {
   @Get()
   async findAll() {
     return this.apEventsService.findAll();
+  }
+
+  @Post('login')
+  public async login(@Body() loginDto: LoginDto) {
+    await this.apEventsService.login(loginDto);
   }
 }
