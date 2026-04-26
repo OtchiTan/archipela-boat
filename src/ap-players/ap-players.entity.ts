@@ -1,5 +1,13 @@
 import { ApEvent } from 'src/ap-events/ap-events.entity';
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { ApGame } from 'src/ap-games/ap-games.entity';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 @Entity()
 export class ApPlayer {
@@ -15,12 +23,16 @@ export class ApPlayer {
   @Column({ nullable: true })
   apworld?: string;
 
-  @Column({ nullable: true })
-  slot?: string;
+  @Column()
+  embedId: number = -1;
 
-  @Column({ default: 0 })
-  deathlinkCount!: number;
+  @Column()
+  fieldId: number = -1;
 
   @ManyToOne(() => ApEvent, (apEvent) => apEvent.players)
   event!: ApEvent;
+
+  @OneToMany(() => ApGame, (apGame) => apGame.player)
+  @JoinColumn()
+  games!: ApGame[];
 }

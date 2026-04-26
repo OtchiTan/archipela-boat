@@ -1,3 +1,4 @@
+import { ApGame } from 'src/ap-games/ap-games.entity';
 import { ApPlayer } from 'src/ap-players/ap-players.entity';
 import {
   Column,
@@ -33,4 +34,8 @@ export class ApEvent {
   @OneToMany(() => ApPlayer, (apPlayer) => apPlayer.event)
   @JoinColumn()
   players!: ApPlayer[];
+
+  @OneToMany(() => ApGame, (apGame) => apGame.event)
+  @JoinColumn()
+  games!: ApGame[];
 }

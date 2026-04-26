@@ -8,6 +8,7 @@ import { ApPlayersModule } from './ap-players/ap-players.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { CommandsModule } from './commands/commands.module';
+import { ApGamesModule } from './ap-games/ap-games.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { CommandsModule } from './commands/commands.module';
     CommandsModule,
     ApPlayersModule,
     ApEventsModule,
+    ApGamesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

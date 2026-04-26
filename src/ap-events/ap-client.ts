@@ -1,12 +1,14 @@
 import { Client } from 'archipelago.js';
 import { ApEventsService } from 'src/ap-events/ap-events.service';
+import { ApGamesService } from 'src/ap-games/ap-games.service';
 import { ApPlayersService } from 'src/ap-players/ap-players.service';
 
 export class ApClient {
   public client?: Client;
   constructor(
     private readonly apEventsService: ApEventsService,
-    private apPlayersService: ApPlayersService,
+    private readonly apPlayersService: ApPlayersService,
+    private readonly apGamesService: ApGamesService,
   ) {}
 
   async connectClient(url: string) {
@@ -14,11 +16,11 @@ export class ApClient {
 
     this.client = new Client();
 
-    await this.client.login(url, apEvent.players[0].slot ?? '');
+    await this.client.login(url, apEvent.games[0].slot ?? '');
     this.client.deathLink.enableDeathLink();
 
     this.client.deathLink.on('deathReceived', (slot) => {
-      this.apPlayersService.increaseDeathlinkCount(slot).catch((err) => {
+      this.apGamesService.increaseDeathlinkCount(apEvent, slot).catch((err) => {
         throw err;
       });
     });

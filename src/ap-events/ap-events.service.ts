@@ -1,6 +1,6 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { ModuleRef } from '@nestjs/core';
 import { InjectRepository } from '@nestjs/typeorm';
+import { ApGamesService } from 'src/ap-games/ap-games.service';
 import { ApPlayersService } from 'src/ap-players/ap-players.service';
 import { EntityNotFoundError, IsNull, Not, Repository } from 'typeorm';
 import { ApClient } from './ap-client';
@@ -14,7 +14,7 @@ export class ApEventsService implements OnModuleInit {
   constructor(
     @InjectRepository(ApEvent) private apEventRepository: Repository<ApEvent>,
     @Inject() private apPlayersService: ApPlayersService,
-    private moduleRef: ModuleRef,
+    @Inject() private apGamesService: ApGamesService,
   ) {}
 
   async onModuleInit() {
@@ -64,7 +64,11 @@ export class ApEventsService implements OnModuleInit {
   }
 
   async startNewApClient(url: string) {
-    const apClient = new ApClient(this, this.apPlayersService);
+    const apClient = new ApClient(
+      this,
+      this.apPlayersService,
+      this.apGamesService,
+    );
     this.apClients.set(url, apClient);
     await apClient.connectClient(url);
   }

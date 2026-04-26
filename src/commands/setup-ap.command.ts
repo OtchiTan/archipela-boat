@@ -1,9 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { EmbedBuilder } from 'discord.js';
 import {
-  Button,
-  type ButtonContext,
-  ComponentParam,
   Context,
   Options,
   SlashCommand,
@@ -38,29 +35,12 @@ export class SetupApCommand {
           .setTimestamp(new Date())
           .setDescription(`:busts_in_silhouette: 0 personne inscrite`),
       ],
+      withResponse: true,
     });
 
     if (event !== null) {
-      event.messageId = result.id;
+      event.messageId = result.resource?.message?.id;
       await this.apEventsService.updateEvent(event.id, event);
-    }
-  }
-
-  @Button('start/:eventId')
-  public async onButtonStart(
-    @Context() [interaction]: ButtonContext,
-    @ComponentParam('eventId') eventId: number,
-  ) {
-    const event = await this.apEventsService.findEvent({ id: eventId });
-
-    if (event !== null) {
-      event.startTime = new Date();
-
-      await this.apEventsService.updateEvent(eventId, event);
-
-      await interaction.reply({
-        content: `Lancement de l'événement ${eventId}`,
-      });
     }
   }
 }

@@ -11,13 +11,15 @@ export class ApPlayersService {
   ) {}
 
   async findAll() {
-    return await this.apPlayerRepository.find({ relations: ['event'] });
+    return await this.apPlayerRepository.find({
+      relations: { event: true, games: true },
+    });
   }
 
   async findOne(player: Partial<ApPlayer>): Promise<ApPlayer> {
     const foundedPlayer = await this.apPlayerRepository.findOne({
       where: player,
-      relations: ['event'],
+      relations: { event: true, games: true },
     });
     if (!foundedPlayer) {
       throw new EntityNotFoundError(ApPlayer, player);
@@ -30,13 +32,8 @@ export class ApPlayersService {
   }
 
   async update(id: number, player: Partial<ApPlayer>): Promise<ApPlayer> {
+    console.log(`Updating player with ID: ${id} Data:`, player);
     await this.apPlayerRepository.update(id, player);
     return await this.findOne({ id });
-  }
-
-  public async increaseDeathlinkCount(slot: string): Promise<void> {
-    const player = await this.findOne({ slot });
-    player.deathlinkCount += 1;
-    await this.apPlayerRepository.save(player);
   }
 }
