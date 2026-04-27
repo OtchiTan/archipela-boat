@@ -6,28 +6,29 @@ import {
   type SlashCommandContext,
 } from 'necord';
 import { ApGamesService } from 'src/ap-games/ap-games.service';
-import { RegisterDto } from './dto/register.dto';
+import { RegisterAdminDto } from './dto/register-admin.dto';
 
 @Injectable()
-export class RegisterCommand {
+export class RegisterAdminCommand {
   constructor(
     @Inject(forwardRef(() => ApGamesService))
     private apGamesService: ApGamesService,
   ) {}
 
   @SlashCommand({
-    name: 'register',
+    name: 'register-admin',
     description: 'Enregistre tes mondes pour le prochain archipelago',
+    defaultMemberPermissions: 'Administrator',
   })
   public async onRegister(
     @Context() [interaction]: SlashCommandContext,
-    @Options() registerDto: RegisterDto,
+    @Options() registerDto: RegisterAdminDto,
   ) {
     return await this.apGamesService.onRegister(
       [interaction],
       registerDto,
-      interaction.user.id,
-      interaction.user.displayName,
+      registerDto.user.id,
+      registerDto.user.displayName,
     );
   }
 }

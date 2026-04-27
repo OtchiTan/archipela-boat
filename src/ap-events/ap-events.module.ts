@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ApGamesModule } from 'src/ap-games/ap-games.module';
 import { ApPlayersModule } from 'src/ap-players/ap-players.module';
@@ -9,8 +9,8 @@ import { ApEventsService } from './ap-events.service';
 @Module({
   imports: [
     TypeOrmModule.forFeature([ApEvent]),
-    ApPlayersModule,
-    ApGamesModule,
+    forwardRef(() => ApPlayersModule),
+    forwardRef(() => ApGamesModule),
   ],
   controllers: [ApEventsController],
   providers: [ApEventsService],

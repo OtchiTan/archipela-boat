@@ -1,4 +1,4 @@
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
+import { forwardRef, Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ApGamesService } from 'src/ap-games/ap-games.service';
 import { ApPlayersService } from 'src/ap-players/ap-players.service';
@@ -13,8 +13,10 @@ export class ApEventsService implements OnModuleInit {
 
   constructor(
     @InjectRepository(ApEvent) private apEventRepository: Repository<ApEvent>,
-    @Inject() private apPlayersService: ApPlayersService,
-    @Inject() private apGamesService: ApGamesService,
+    @Inject(forwardRef(() => ApPlayersService))
+    private apPlayersService: ApPlayersService,
+    @Inject(forwardRef(() => ApGamesService))
+    private apGamesService: ApGamesService,
   ) {}
 
   async onModuleInit() {

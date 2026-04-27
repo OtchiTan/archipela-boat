@@ -36,4 +36,8 @@ export class ApPlayersService {
     await this.apPlayerRepository.update(id, player);
     return await this.findOne({ id });
   }
+
+  public async countPlayers(eventId: number): Promise<number> {
+    return await this.apPlayerRepository.count({ where: { id: eventId } });
+  }
 }

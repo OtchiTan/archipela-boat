@@ -1,16 +1,9 @@
-import { HttpService } from '@nestjs/axios';
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Context, SlashCommand, type SlashCommandContext } from 'necord';
-import { ApEventsService } from 'src/ap-events/ap-events.service';
-import { ApPlayersService } from 'src/ap-players/ap-players.service';
 
 @Injectable()
 export class ClearMessagesCommand {
-  constructor(
-    @Inject() private apPlayersService: ApPlayersService,
-    @Inject() private apEventsService: ApEventsService,
-    private readonly httpService: HttpService,
-  ) {}
+  constructor() {}
 
   @SlashCommand({
     name: 'clear-messages',

@@ -1,15 +1,19 @@
-import { HttpModule } from '@nestjs/axios';
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { ApEventsModule } from 'src/ap-events/ap-events.module';
 import { ApGamesModule } from 'src/ap-games/ap-games.module';
-import { ApPlayersModule } from 'src/ap-players/ap-players.module';
 import { ClearMessagesCommand } from './clear-messages.command';
+import { RegisterAdminCommand } from './register-admin.command';
 import { RegisterCommand } from './register.command';
 import { SetupApCommand } from './setup-ap.command';
 
 @Module({
-  imports: [ApPlayersModule, ApEventsModule, ApGamesModule, HttpModule],
+  imports: [forwardRef(() => ApEventsModule), forwardRef(() => ApGamesModule)],
   controllers: [],
-  providers: [RegisterCommand, SetupApCommand, ClearMessagesCommand],
+  providers: [
+    RegisterCommand,
+    RegisterAdminCommand,
+    SetupApCommand,
+    ClearMessagesCommand,
+  ],
 })
 export class CommandsModule {}
