@@ -32,8 +32,11 @@ export class ApPlayersService {
   }
 
   async update(id: number, player: Partial<ApPlayer>): Promise<ApPlayer> {
-    console.log(`Updating player with ID: ${id} Data:`, player);
-    await this.apPlayerRepository.update(id, player);
+    await this.apPlayerRepository.update(id, {
+      ...player,
+      games: undefined,
+      event: undefined,
+    });
     return await this.findOne({ id });
   }
 

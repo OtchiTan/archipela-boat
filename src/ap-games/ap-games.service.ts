@@ -104,15 +104,10 @@ export class ApGamesService {
         discord_id: userId,
       });
 
-      apPlayer.apworld = registerDto.apworld?.url;
-      apPlayer.yaml = JSON.stringify(yamlData);
-
       isPlayerExisting = true;
     } catch {
       apPlayer = new ApPlayer();
       apPlayer.discord_id = userId;
-      apPlayer.yaml = JSON.stringify(yamlData);
-      apPlayer.apworld = registerDto.apworld?.url;
       apPlayer.event = event;
     }
 
@@ -133,6 +128,9 @@ export class ApGamesService {
       apGame.slot = yamlData.name;
       apGame.event = event;
     }
+
+    apGame.yaml = JSON.stringify(yamlData);
+    apGame.apworld = registerDto.apworld?.url;
 
     const message = await interaction.channel?.messages.fetch(event.messageId!);
 
@@ -170,7 +168,10 @@ export class ApGamesService {
       embeds[embedId] = newEmbed;
 
       const firstEmbed = EmbedBuilder.from(embeds[0]);
-      const playerCount = await this.apPlayersService.countPlayers(event.id);
+      let playerCount = await this.apPlayersService.countPlayers(event.id);
+      if (!isPlayerExisting) {
+        playerCount++;
+      }
       firstEmbed.setDescription(
         `:busts_in_silhouette: ${playerCount} personne inscrite`,
       );
@@ -185,8 +186,6 @@ export class ApGamesService {
     }
 
     if (isPlayerExisting) {
-      delete (apPlayer.event as Partial<ApPlayer>).event;
-      delete (apPlayer.event as Partial<ApPlayer>).games;
       apPlayer = await this.apPlayersService.update(apPlayer.id, apPlayer);
     } else {
       apPlayer = await this.apPlayersService.create(apPlayer);
@@ -194,8 +193,6 @@ export class ApGamesService {
 
     apGame.player = apPlayer;
     if (isGameExisting) {
-      delete (apGame.event as Partial<ApGame>).event;
-      delete (apGame.event as Partial<ApGame>).player;
       await this.update(apGame.id, apGame);
     } else {
       await this.create(apGame);

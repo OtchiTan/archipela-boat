@@ -18,12 +18,6 @@ export class ApPlayer {
   discord_id!: string;
 
   @Column()
-  yaml!: string;
-
-  @Column({ nullable: true })
-  apworld?: string;
-
-  @Column()
   embedId: number = -1;
 
   @Column()

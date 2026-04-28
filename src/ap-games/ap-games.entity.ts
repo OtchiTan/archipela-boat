@@ -11,6 +11,12 @@ export class ApGame {
   name!: string;
 
   @Column()
+  yaml!: string;
+
+  @Column({ nullable: true })
+  apworld?: string;
+
+  @Column()
   slot!: string;
 
   @ManyToOne(() => ApEvent, (apEvent) => apEvent.games)
