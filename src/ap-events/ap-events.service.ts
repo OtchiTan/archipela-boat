@@ -2,10 +2,10 @@ import { forwardRef, Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ApGamesService } from 'src/ap-games/ap-games.service';
 import { ApPlayersService } from 'src/ap-players/ap-players.service';
+import { StartApDto } from 'src/commands/dto/start-ap.dto';
 import { EntityNotFoundError, IsNull, Not, Repository } from 'typeorm';
 import { ApClient } from './ap-client';
 import { ApEvent } from './ap-events.entity';
-import { LoginDto } from './dto/login.dto';
 
 @Injectable()
 export class ApEventsService implements OnModuleInit {
@@ -59,15 +59,19 @@ export class ApEventsService implements OnModuleInit {
     await this.apEventRepository.update(eventId, data);
   }
 
-  public async login(loginDto: LoginDto) {
+  public async startAp(startApDto: StartApDto) {
     const event = await this.findEvent({});
 
+    if (event.games.length === 0) {
+      throw new Error("Il n'y à aucun joueurs enregistrés sur l'êvenement");
+    }
+
     await this.updateEvent(event?.id, {
-      url: loginDto.url,
+      url: startApDto.url,
       startTime: new Date(),
     });
 
-    await this.startNewApClient(loginDto.url);
+    await this.startNewApClient(startApDto.url);
   }
 
   async startNewApClient(url: string) {

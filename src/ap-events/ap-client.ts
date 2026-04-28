@@ -4,7 +4,7 @@ import { ApGamesService } from 'src/ap-games/ap-games.service';
 import { ApPlayersService } from 'src/ap-players/ap-players.service';
 
 export class ApClient {
-  public client?: Client;
+  public client = new Client();
   constructor(
     private readonly apEventsService: ApEventsService,
     private readonly apPlayersService: ApPlayersService,
@@ -13,8 +13,6 @@ export class ApClient {
 
   async connectClient(url: string) {
     const apEvent = await this.apEventsService.findEvent({ url });
-
-    this.client = new Client();
 
     await this.client.login(url, apEvent.games[0].slot ?? '', '', {
       tags: ['AP', 'Tracker'],
