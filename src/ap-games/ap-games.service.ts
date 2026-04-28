@@ -3,6 +3,8 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { APIEmbed, EmbedBuilder, JSONEncodable, Message } from 'discord.js';
 import { type SlashCommandContext } from 'necord';
+import { ApDeathlink } from 'src/ap-deathlinks/ap-deathlinks.entity';
+import { ApDeathlinksService } from 'src/ap-deathlinks/ap-deathlinks.service';
 import { ApEvent } from 'src/ap-events/ap-events.entity';
 import { ApEventsService } from 'src/ap-events/ap-events.service';
 import { ApPlayer } from 'src/ap-players/ap-players.entity';
@@ -21,12 +23,14 @@ export class ApGamesService {
     private apPlayersService: ApPlayersService,
     @Inject(forwardRef(() => ApEventsService))
     private apEventsService: ApEventsService,
+    @Inject(forwardRef(() => ApDeathlinksService))
+    private apDeathlinksService: ApDeathlinksService,
     private readonly httpService: HttpService,
   ) {}
 
   async findOne(game: Partial<ApGame>): Promise<ApGame> {
     const foundedGame = await this.apGameRepository.findOne({
-      where: game,
+      where: { ...game, event: { id: game.event?.id } },
       relations: { event: true, player: true },
     });
     if (!foundedGame) {
@@ -47,10 +51,18 @@ export class ApGamesService {
   public async increaseDeathlinkCount(
     event: ApEvent,
     slot: string,
+    timestamp: number,
+    cause?: string,
   ): Promise<void> {
-    const game = await this.findOne({ slot, event });
-    game.deathlinkCount += 1;
-    await this.apGameRepository.save(game);
+    const game = await this.findOne({
+      slot,
+      event,
+    });
+    const apDeathlink = new ApDeathlink();
+    apDeathlink.game = game;
+    apDeathlink.timestamp = new Date(timestamp);
+    apDeathlink.cause = cause;
+    await this.apDeathlinksService.create(apDeathlink);
   }
 
   public async onRegister(

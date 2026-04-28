@@ -1,6 +1,14 @@
+import { ApDeathlink } from 'src/ap-deathlinks/ap-deathlinks.entity';
 import { ApEvent } from 'src/ap-events/ap-events.entity';
 import { ApPlayer } from 'src/ap-players/ap-players.entity';
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 @Entity()
 export class ApGame {
@@ -19,7 +27,7 @@ export class ApGame {
   @Column()
   slot!: string;
 
-  @ManyToOne(() => ApEvent, (apEvent) => apEvent.games)
+  @ManyToOne(() => ApEvent, (event) => event.games)
   event!: ApEvent;
 
   @Column()
@@ -28,6 +36,10 @@ export class ApGame {
   @Column({ default: 0 })
   deathlinkCount!: number;
 
-  @ManyToOne(() => ApPlayer, (apPlayer) => apPlayer.games)
+  @ManyToOne(() => ApPlayer, (player) => player.games)
   player!: ApPlayer;
+
+  @OneToMany(() => ApDeathlink, (deathlink) => deathlink.game)
+  @JoinColumn()
+  deathlinks!: ApDeathlink[];
 }

@@ -9,6 +9,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { CommandsModule } from './commands/commands.module';
 import { ApGamesModule } from './ap-games/ap-games.module';
+import { ApDeathlinksModule } from './ap-deathlinks/ap-deathlinks.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { ApGamesModule } from './ap-games/ap-games.module';
     ApPlayersModule,
     ApEventsModule,
     ApGamesModule,
+    ApDeathlinksModule,
   ],
   controllers: [AppController],
   providers: [AppService],

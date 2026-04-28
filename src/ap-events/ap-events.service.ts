@@ -21,7 +21,11 @@ export class ApEventsService implements OnModuleInit {
 
   async onModuleInit() {
     const events = await this.apEventRepository.find({
-      where: { url: Not(IsNull()), endTime: Not(IsNull()) },
+      where: {
+        url: Not(IsNull()),
+        startTime: Not(IsNull()),
+        endTime: IsNull(),
+      },
     });
 
     for (const event of events) {
@@ -38,7 +42,7 @@ export class ApEventsService implements OnModuleInit {
   async findEvent(filter: Partial<ApEvent>): Promise<ApEvent> {
     const event = await this.apEventRepository.findOne({
       where: filter,
-      relations: { players: true },
+      relations: { players: true, games: true },
     });
     if (!event) {
       throw new EntityNotFoundError(ApEvent, filter);
@@ -60,6 +64,7 @@ export class ApEventsService implements OnModuleInit {
 
     await this.updateEvent(event?.id, {
       url: loginDto.url,
+      startTime: new Date(),
     });
 
     await this.startNewApClient(loginDto.url);

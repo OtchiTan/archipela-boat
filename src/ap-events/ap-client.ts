@@ -16,13 +16,18 @@ export class ApClient {
 
     this.client = new Client();
 
-    await this.client.login(url, apEvent.games[0].slot ?? '');
+    await this.client.login(url, apEvent.games[0].slot ?? '', '', {
+      tags: ['AP', 'Tracker'],
+    });
     this.client.deathLink.enableDeathLink();
 
-    this.client.deathLink.on('deathReceived', (slot) => {
-      this.apGamesService.increaseDeathlinkCount(apEvent, slot).catch((err) => {
-        throw err;
-      });
+    this.client.deathLink.on('deathReceived', (slot, timestamp, cause) => {
+      console.log('On deathlink');
+      this.apGamesService
+        .increaseDeathlinkCount(apEvent, slot, timestamp, cause)
+        .catch((err) => {
+          console.log(err);
+        });
     });
 
     console.log('Client connected on url : ' + url);
