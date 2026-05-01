@@ -23,10 +23,13 @@ export class UnregisterCommand {
     @Context() [interaction]: SlashCommandContext,
     @Options() unregisterDto: UnregisterDto,
   ) {
+    const isAdmin = interaction.memberPermissions?.has('Administrator');
     try {
       await this.apGamesService.unregisterGame(
         unregisterDto,
         interaction.channelId,
+        interaction.user.id,
+        isAdmin === true,
       );
     } catch (error) {
       if (error instanceof Error) {

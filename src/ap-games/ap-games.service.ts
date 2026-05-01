@@ -157,7 +157,12 @@ export class ApGamesService {
     await this.apEventsService.updateEmbeds(event);
   }
 
-  public async unregisterGame(unregisterDto: UnregisterDto, channelId: string) {
+  public async unregisterGame(
+    unregisterDto: UnregisterDto,
+    channelId: string,
+    userId: string,
+    isAdmin: boolean,
+  ) {
     const event = await this.apEventsService.findEvent({ channelId });
 
     if (event === null) {
@@ -168,6 +173,10 @@ export class ApGamesService {
 
     if (game === null) {
       throw new Error('Aucun jeu trouvé avec ce slot pour cet êvenement');
+    }
+
+    if (!isAdmin && userId !== game.player.discord_id) {
+      throw new Error("Ce slot ne t'appartient pas");
     }
 
     const playerId = game.player.id;
