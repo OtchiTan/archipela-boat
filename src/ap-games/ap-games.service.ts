@@ -1,8 +1,24 @@
 import { HttpService } from '@nestjs/axios';
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import {
+  forwardRef,
+  HttpException,
+  HttpStatus,
+  Inject,
+  Injectable,
+  StreamableFile,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { APIEmbed, EmbedBuilder, JSONEncodable, Message } from 'discord.js';
+import {
+  createReadStream,
+  createWriteStream,
+  existsSync,
+  mkdirSync,
+  writeFileSync,
+} from 'fs';
+import { IncomingMessage } from 'http';
 import { type SlashCommandContext } from 'necord';
+import { basename, join } from 'path';
 import { ApDeathlink } from 'src/ap-deathlinks/ap-deathlinks.entity';
 import { ApDeathlinksService } from 'src/ap-deathlinks/ap-deathlinks.service';
 import { ApEvent } from 'src/ap-events/ap-events.entity';
@@ -11,7 +27,7 @@ import { ApPlayer } from 'src/ap-players/ap-players.entity';
 import { ApPlayersService } from 'src/ap-players/ap-players.service';
 import { RegisterDto } from 'src/commands/dto/register.dto';
 import { EntityNotFoundError, Repository } from 'typeorm';
-import { parse as yamlParse } from 'yaml';
+import { parse as yamlParse, stringify as yamlStringify } from 'yaml';
 import { ApGame } from './ap-games.entity';
 
 @Injectable()
@@ -39,8 +55,48 @@ export class ApGamesService {
     return foundedGame;
   }
 
+  async getYamlFile(id: number): Promise<StreamableFile> {
+    const apGame = await this.findOne({ id });
+
+    const folderPath = join(process.cwd(), '.tmp', 'yaml');
+    const filePath = join(folderPath, `${apGame.name}.yaml`);
+    if (!existsSync(folderPath)) {
+      mkdirSync(folderPath, { recursive: true });
+    }
+
+    const fileData = JSON.parse(apGame.yaml) as Record<string, any>;
+    fileData.name = apGame.slot;
+
+    const yamlData = yamlStringify(fileData);
+
+    writeFileSync(filePath, yamlData);
+
+    const file = createReadStream(filePath);
+
+    return new StreamableFile(file, {
+      type: 'application/yaml',
+      disposition: `attachment; filename="${basename(filePath)}"`,
+    });
+  }
+
+  async getApWorldFile(id: number): Promise<StreamableFile> {
+    const apGame = await this.findOne({ id });
+
+    if (apGame.apworld === undefined) {
+      throw new HttpException('NotFound', HttpStatus.NOT_FOUND);
+    }
+
+    const file = createReadStream(apGame.apworld);
+
+    return new StreamableFile(file, {
+      type: 'application/apworld',
+      disposition: `attachment; filename="${basename(apGame.apworld)}"`,
+    });
+  }
+
   async create(game: Partial<ApGame>): Promise<ApGame> {
-    return await this.apGameRepository.save(game);
+    const createGame = await this.apGameRepository.save(game);
+    return this.findOne({ id: createGame.id });
   }
 
   async update(id: number, game: Partial<ApGame>): Promise<ApGame> {
@@ -108,23 +164,44 @@ export class ApGamesService {
       });
     }
 
-    let apPlayer: ApPlayer;
-    let isPlayerExisting = false;
-    try {
-      apPlayer = await this.apPlayersService.findOne({
-        event: event,
-        discord_id: userId,
-      });
+    let apWorldFilePath: string | undefined;
+    if (registerDto.apworld) {
+      try {
+        const folderPath = join(process.cwd(), '.tmp', 'yaml');
+        apWorldFilePath = join(folderPath, registerDto.apworld.name);
+        if (!existsSync(folderPath)) {
+          mkdirSync(folderPath, { recursive: true });
+        }
 
-      isPlayerExisting = true;
-    } catch {
-      apPlayer = new ApPlayer();
-      apPlayer.discord_id = userId;
-      apPlayer.event = event;
+        const writer = createWriteStream(apWorldFilePath);
+
+        const response = await this.httpService.axiosRef.get<IncomingMessage>(
+          registerDto.apworld.url,
+          { responseType: 'stream' },
+        );
+
+        response.data.pipe(writer);
+      } catch {
+        return interaction.reply({
+          content: 'Impossible de récupérer le fichier apworld',
+          flags: 'Ephemeral',
+        });
+      }
     }
 
-    let apGame: ApGame;
-    let isGameExisting = false;
+    let apPlayer = new ApPlayer();
+    try {
+      apPlayer = await this.apPlayersService.findOne({
+        event,
+        discord_id: userId,
+      });
+    } catch {
+      apPlayer.event = event;
+      apPlayer.discord_id = userId;
+      apPlayer = await this.apPlayersService.create(apPlayer);
+    }
+
+    let apGame = new ApGame();
     try {
       apGame = await this.findOne({
         player: apPlayer,
@@ -133,16 +210,18 @@ export class ApGamesService {
         slot: yamlData.name,
       });
 
-      isGameExisting = true;
+      apGame.yaml = JSON.stringify(yamlData);
+      apGame.apworld = apWorldFilePath;
     } catch {
-      apGame = new ApGame();
+      apGame.player = apPlayer;
+      apGame.event = event;
       apGame.name = yamlData.game;
       apGame.slot = yamlData.name;
-      apGame.event = event;
-    }
+      apGame.yaml = JSON.stringify(yamlData);
+      apGame.apworld = apWorldFilePath;
 
-    apGame.yaml = JSON.stringify(yamlData);
-    apGame.apworld = registerDto.apworld?.url;
+      apGame = await this.create(apGame);
+    }
 
     const message = await interaction.channel?.messages.fetch(event.messageId!);
 
@@ -159,8 +238,6 @@ export class ApGamesService {
 
       fields[fieldId].name = userDisplayName;
 
-      const apWorldIcon = registerDto.apworld ? ':white_check_mark:' : ':x:';
-
       const lines = fields[fieldId].value.split('\n');
 
       const lineId = this.getLineNextId(apGame.lineId, yamlData.name, lines);
@@ -169,8 +246,12 @@ export class ApGamesService {
         lines.push('');
       }
 
+      const apWorld = registerDto.apworld
+        ? `[Apworld](${process.env.APP_URL}/ap-games/${apGame.id}/apworld) ✅`
+        : 'Apworld :x:';
+
       lines[lineId] =
-        `${yamlData.game} - YAML :white_check_mark: - Apworld ${apWorldIcon}`;
+        `${yamlData.game} - [YAML](${process.env.APP_URL}/ap-games/${apGame.id}/yaml) ✅ - ${apWorld}`;
 
       fields[fieldId].value = lines.join('\n');
 
@@ -180,10 +261,9 @@ export class ApGamesService {
       embeds[embedId] = newEmbed;
 
       const firstEmbed = EmbedBuilder.from(embeds[0]);
-      let playerCount = await this.apPlayersService.countPlayers(event.id);
-      if (!isPlayerExisting) {
-        playerCount++;
-      }
+
+      const playerCount = await this.apPlayersService.countPlayers(event.id);
+
       firstEmbed.setDescription(
         `:busts_in_silhouette: ${playerCount} personne inscrite`,
       );
@@ -197,18 +277,8 @@ export class ApGamesService {
       apGame.lineId = lineId;
     }
 
-    if (isPlayerExisting) {
-      apPlayer = await this.apPlayersService.update(apPlayer.id, apPlayer);
-    } else {
-      apPlayer = await this.apPlayersService.create(apPlayer);
-    }
-
-    apGame.player = apPlayer;
-    if (isGameExisting) {
-      await this.update(apGame.id, apGame);
-    } else {
-      await this.create(apGame);
-    }
+    await this.apPlayersService.update(apPlayer.id, apPlayer);
+    await this.update(apGame.id, apGame);
 
     return interaction.reply({
       content: 'Fichiers bien enregisté',
@@ -217,7 +287,7 @@ export class ApGamesService {
   }
 
   getEmbed(embedId: number, message: Message<boolean>): [EmbedBuilder, number] {
-    if (embedId != -1) {
+    if (embedId !== -1) {
       return [EmbedBuilder.from(message.embeds[embedId]), embedId];
     }
 
@@ -233,7 +303,7 @@ export class ApGamesService {
   }
 
   getFieldNextId(fieldId: number, embed: EmbedBuilder): number {
-    if (fieldId != -1) {
+    if (fieldId !== -1) {
       return fieldId;
     }
 
@@ -241,7 +311,7 @@ export class ApGamesService {
   }
 
   getLineNextId(lineId: number, game: string, lines: string[]): number {
-    if (lineId != -1) {
+    if (lineId !== -1) {
       return lineId;
     }
 

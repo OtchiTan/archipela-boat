@@ -18,7 +18,7 @@ export class ApPlayersService {
 
   async findOne(player: Partial<ApPlayer>): Promise<ApPlayer> {
     const foundedPlayer = await this.apPlayerRepository.findOne({
-      where: player,
+      where: { ...player, event: { id: player.event?.id } },
       relations: { event: true, games: true },
     });
     if (!foundedPlayer) {
@@ -28,7 +28,8 @@ export class ApPlayersService {
   }
 
   async create(player: Partial<ApPlayer>): Promise<ApPlayer> {
-    return await this.apPlayerRepository.save(player);
+    const createdPlayer = await this.apPlayerRepository.save(player);
+    return this.findOne({ id: createdPlayer.id });
   }
 
   async update(id: number, player: Partial<ApPlayer>): Promise<ApPlayer> {

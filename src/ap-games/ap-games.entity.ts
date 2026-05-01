@@ -33,9 +33,6 @@ export class ApGame {
   @Column()
   lineId: number = -1;
 
-  @Column({ default: 0 })
-  deathlinkCount!: number;
-
   @ManyToOne(() => ApPlayer, (player) => player.games)
   player!: ApPlayer;
 
