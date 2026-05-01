@@ -13,7 +13,9 @@ import { ApDeathlink } from 'src/ap-deathlinks/ap-deathlinks.entity';
 import { ApDeathlinksService } from 'src/ap-deathlinks/ap-deathlinks.service';
 import { ApEvent } from 'src/ap-events/ap-events.entity';
 import { ApEventsService } from 'src/ap-events/ap-events.service';
+import { ApPlayersService } from 'src/ap-players/ap-players.service';
 import { RegisterDto } from 'src/commands/dto/register.dto';
+import { UnregisterDto } from 'src/commands/dto/unregister.dto';
 import { Repository } from 'typeorm';
 import { stringify as yamlStringify } from 'yaml';
 import { ApGame } from './ap-games.entity';
@@ -26,6 +28,8 @@ export class ApGamesService {
     private apGameRepository: Repository<ApGame>,
     @Inject(forwardRef(() => ApEventsService))
     private apEventsService: ApEventsService,
+    @Inject(forwardRef(() => ApPlayersService))
+    private apPlayersService: ApPlayersService,
     @Inject(forwardRef(() => ApDeathlinksService))
     private apDeathlinksService: ApDeathlinksService,
     @Inject() private readonly registerGameUseGame: RegisterGameUseCase,
@@ -149,6 +153,36 @@ export class ApGamesService {
     if (event === null) {
       throw new Error("Il n'y à pas d'êvenement démarré dans ce channel");
     }
+
+    await this.apEventsService.updateEmbeds(event);
+  }
+
+  public async unregisterGame(unregisterDto: UnregisterDto, channelId: string) {
+    const event = await this.apEventsService.findEvent({ channelId });
+
+    if (event === null) {
+      throw new Error("Il n'y à pas d'êvenement démarré dans ce channel");
+    }
+
+    const game = await this.findOne({ slot: unregisterDto.slot, event });
+
+    if (game === null) {
+      throw new Error('Aucun jeu trouvé avec ce slot pour cet êvenement');
+    }
+
+    const playerId = game.player.id;
+
+    await this.apGameRepository.delete({ id: game.id });
+
+    const player = await this.apPlayersService.findOne({ id: playerId });
+
+    if (player === null) {
+      throw new Error(
+        "Le joueur n'existe pas (ptdr si ce message sort un jour c'est que quelqu'un à fait joujoue avec la bdd",
+      );
+    }
+
+    await this.apPlayersService.delete(playerId);
 
     await this.apEventsService.updateEmbeds(event);
   }

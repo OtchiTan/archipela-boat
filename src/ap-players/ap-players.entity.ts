@@ -23,7 +23,7 @@ export class ApPlayer {
   @ManyToOne(() => ApEvent, (apEvent) => apEvent.players)
   event!: ApEvent;
 
-  @OneToMany(() => ApGame, (apGame) => apGame.player)
+  @OneToMany(() => ApGame, (apGame) => apGame.player, { cascade: true })
   @JoinColumn()
   games!: ApGame[];
 }

@@ -36,7 +36,9 @@ export class ApGame {
   @ManyToOne(() => ApPlayer, (player) => player.games)
   player!: ApPlayer;
 
-  @OneToMany(() => ApDeathlink, (deathlink) => deathlink.game)
+  @OneToMany(() => ApDeathlink, (deathlink) => deathlink.game, {
+    cascade: true,
+  })
   @JoinColumn()
   deathlinks!: ApDeathlink[];
 }

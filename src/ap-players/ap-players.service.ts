@@ -24,6 +24,16 @@ export class ApPlayersService {
     });
   }
 
+  async delete(playerId: number) {
+    const player = await this.findOne({ id: playerId });
+
+    if (player === null) {
+      throw new HttpException("Player doesn't exist", HttpStatus.BAD_GATEWAY);
+    }
+
+    await this.apPlayerRepository.delete({ id: playerId });
+  }
+
   async create(data: Partial<ApPlayer>): Promise<ApPlayer> {
     const createdPlayer = await this.apPlayerRepository.save(data);
     const player = await this.findOne({ id: createdPlayer.id });

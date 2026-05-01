@@ -6,6 +6,7 @@ import { RegisterAdminCommand } from './register-admin.command';
 import { RegisterCommand } from './register.command';
 import { SetupApCommand } from './setup-ap.command';
 import { StartApCommand } from './start-ap.command';
+import { UnregisterCommand } from './unregister.command';
 
 @Module({
   imports: [forwardRef(() => ApEventsModule), forwardRef(() => ApGamesModule)],
@@ -16,6 +17,7 @@ import { StartApCommand } from './start-ap.command';
     SetupApCommand,
     ClearMessagesCommand,
     StartApCommand,
+    UnregisterCommand,
   ],
 })
 export class CommandsModule {}
