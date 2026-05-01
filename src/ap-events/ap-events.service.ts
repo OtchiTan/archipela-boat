@@ -6,6 +6,7 @@ import { StartApDto } from 'src/commands/dto/start-ap.dto';
 import { EntityNotFoundError, IsNull, Not, Repository } from 'typeorm';
 import { ApClient } from './ap-client';
 import { ApEvent } from './ap-events.entity';
+import { UpdateEmbedsUseCase } from './usecases/update-embeds.usecase';
 
 @Injectable()
 export class ApEventsService implements OnModuleInit {
@@ -17,6 +18,7 @@ export class ApEventsService implements OnModuleInit {
     private apPlayersService: ApPlayersService,
     @Inject(forwardRef(() => ApGamesService))
     private apGamesService: ApGamesService,
+    @Inject() private readonly updateEmbedsUseCase: UpdateEmbedsUseCase,
   ) {}
 
   async onModuleInit() {
@@ -82,5 +84,9 @@ export class ApEventsService implements OnModuleInit {
     );
     this.apClients.set(url, apClient);
     await apClient.connectClient(url);
+  }
+
+  public async updateEmbeds(event: ApEvent) {
+    await this.updateEmbedsUseCase.updateMessageEmbeds(event);
   }
 }

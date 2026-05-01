@@ -5,6 +5,7 @@ import { ApPlayersModule } from 'src/ap-players/ap-players.module';
 import { ApEventsController } from './ap-events.controller';
 import { ApEvent } from './ap-events.entity';
 import { ApEventsService } from './ap-events.service';
+import { UpdateEmbedsUseCase } from './usecases/update-embeds.usecase';
 
 @Module({
   imports: [
@@ -13,7 +14,7 @@ import { ApEventsService } from './ap-events.service';
     forwardRef(() => ApGamesModule),
   ],
   controllers: [ApEventsController],
-  providers: [ApEventsService],
+  providers: [ApEventsService, UpdateEmbedsUseCase],
   exports: [ApEventsService],
 })
 export class ApEventsModule {}

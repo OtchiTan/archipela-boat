@@ -7,6 +7,7 @@ import { ApPlayersModule } from 'src/ap-players/ap-players.module';
 import { ApGamesController } from './ap-games.controller';
 import { ApGame } from './ap-games.entity';
 import { ApGamesService } from './ap-games.service';
+import { RegisterGameUseCase } from './usecases/register-game.usecase';
 
 @Module({
   imports: [
@@ -17,7 +18,7 @@ import { ApGamesService } from './ap-games.service';
     HttpModule,
   ],
   controllers: [ApGamesController],
-  providers: [ApGamesService],
+  providers: [ApGamesService, RegisterGameUseCase],
   exports: [ApGamesService],
 })
 export class ApGamesModule {}

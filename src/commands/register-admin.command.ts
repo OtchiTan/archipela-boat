@@ -24,11 +24,25 @@ export class RegisterAdminCommand {
     @Context() [interaction]: SlashCommandContext,
     @Options() registerDto: RegisterAdminDto,
   ) {
-    return await this.apGamesService.onRegister(
-      [interaction],
-      registerDto,
-      registerDto.user.id,
-      registerDto.user.displayName,
-    );
+    try {
+      await this.apGamesService.registerGame(
+        registerDto,
+        interaction.channelId,
+        registerDto.user.id,
+        registerDto.user.displayName,
+      );
+    } catch (error) {
+      if (error instanceof Error) {
+        return await interaction.reply({
+          flags: 'Ephemeral',
+          content: error.message,
+        });
+      }
+    }
+
+    return await interaction.reply({
+      flags: 'Ephemeral',
+      content: 'Fichier bien enregistré',
+    });
   }
 }

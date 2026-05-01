@@ -43,6 +43,8 @@ export class ApPlayersService {
   }
 
   public async countPlayers(eventId: number): Promise<number> {
-    return await this.apPlayerRepository.count({ where: { id: eventId } });
+    return await this.apPlayerRepository.count({
+      where: { event: { id: eventId } },
+    });
   }
 }
