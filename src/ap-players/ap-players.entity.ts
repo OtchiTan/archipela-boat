@@ -18,10 +18,7 @@ export class ApPlayer {
   discord_id!: string;
 
   @Column()
-  embedId: number = -1;
-
-  @Column()
-  fieldId: number = -1;
+  username!: string;
 
   @ManyToOne(() => ApEvent, (apEvent) => apEvent.players)
   event!: ApEvent;

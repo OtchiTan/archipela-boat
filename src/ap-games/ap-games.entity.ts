@@ -30,9 +30,6 @@ export class ApGame {
   @ManyToOne(() => ApEvent, (event) => event.games)
   event!: ApEvent;
 
-  @Column()
-  lineId: number = -1;
-
   @ManyToOne(() => ApPlayer, (player) => player.games)
   player!: ApPlayer;
 

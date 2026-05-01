@@ -8,7 +8,7 @@ import {
   StreamableFile,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { APIEmbed, EmbedBuilder, JSONEncodable, Message } from 'discord.js';
+import { EmbedBuilder } from 'discord.js';
 import {
   createReadStream,
   createWriteStream,
@@ -195,9 +195,13 @@ export class ApGamesService {
         event,
         discord_id: userId,
       });
+
+      apPlayer.username = userDisplayName;
+      await this.apPlayersService.update(apPlayer.id, apPlayer);
     } catch {
       apPlayer.event = event;
       apPlayer.discord_id = userId;
+      apPlayer.username = userDisplayName;
       apPlayer = await this.apPlayersService.create(apPlayer);
     }
 
@@ -212,6 +216,8 @@ export class ApGamesService {
 
       apGame.yaml = JSON.stringify(yamlData);
       apGame.apworld = apWorldFilePath;
+
+      await this.update(apGame.id, apGame);
     } catch {
       apGame.player = apPlayer;
       apGame.event = event;
@@ -226,103 +232,52 @@ export class ApGamesService {
     const message = await interaction.channel?.messages.fetch(event.messageId!);
 
     if (message) {
-      const [newEmbed, embedId] = this.getEmbed(apPlayer.embedId, message);
-
-      const fieldId = this.getFieldNextId(apPlayer.fieldId, newEmbed);
-
-      const fields = newEmbed.data.fields ?? [];
-
-      if (fields.length <= fieldId) {
-        fields.push({ name: '', value: '' });
-      }
-
-      fields[fieldId].name = userDisplayName;
-
-      const lines = fields[fieldId].value.split('\n');
-
-      const lineId = this.getLineNextId(apGame.lineId, yamlData.name, lines);
-
-      if (lines.length <= lineId) {
-        lines.push('');
-      }
-
-      const apWorld = registerDto.apworld
-        ? `[Apworld](${process.env.APP_URL}/ap-games/${apGame.id}/apworld) ✅`
-        : 'Apworld :x:';
-
-      lines[lineId] =
-        `${yamlData.game} - [YAML](${process.env.APP_URL}/ap-games/${apGame.id}/yaml) ✅ - ${apWorld}`;
-
-      fields[fieldId].value = lines.join('\n');
-
-      newEmbed.setFields(fields);
-
-      const embeds = message.embeds as JSONEncodable<APIEmbed>[];
-      embeds[embedId] = newEmbed;
-
-      const firstEmbed = EmbedBuilder.from(embeds[0]);
+      const firstEmbed = EmbedBuilder.from(message.embeds[0]);
 
       const playerCount = await this.apPlayersService.countPlayers(event.id);
 
       firstEmbed.setDescription(
         `:busts_in_silhouette: ${playerCount} personne inscrite`,
       );
+      firstEmbed.setFields([]);
 
-      embeds[0] = firstEmbed;
+      const embeds = new Array<EmbedBuilder>(firstEmbed);
+
+      const players = await this.apPlayersService.findAll({ event });
+
+      let embedId = 0;
+      let fieldCount = 0;
+
+      for (const player of players) {
+        const lines = new Array<string>();
+        for (const game of player.games) {
+          const apWorld = game.apworld
+            ? `[Apworld](${process.env.APP_URL}/ap-games/${game.id}/apworld) ✅`
+            : 'Apworld :x:';
+
+          lines.push(
+            `${game.name} - [YAML](${process.env.APP_URL}/ap-games/${game.id}/yaml) ✅ - ${apWorld}`,
+          );
+        }
+        embeds[embedId].addFields({
+          name: player.username,
+          value: lines.join('\n'),
+        });
+        fieldCount++;
+        if (fieldCount >= 25) {
+          embedId++;
+          fieldCount = 0;
+          const nextEmbed = new EmbedBuilder().setDescription('');
+          embeds.push(nextEmbed);
+        }
+      }
 
       await message.edit({ embeds });
-
-      apPlayer.embedId = embedId;
-      apPlayer.fieldId = fieldId;
-      apGame.lineId = lineId;
     }
-
-    await this.apPlayersService.update(apPlayer.id, apPlayer);
-    await this.update(apGame.id, apGame);
 
     return interaction.reply({
       content: 'Fichiers bien enregisté',
       flags: 'Ephemeral',
     });
-  }
-
-  getEmbed(embedId: number, message: Message<boolean>): [EmbedBuilder, number] {
-    if (embedId !== -1) {
-      return [EmbedBuilder.from(message.embeds[embedId]), embedId];
-    }
-
-    let id = 0;
-    for (const embed of message.embeds) {
-      if (embed.fields.length < 25) {
-        return [EmbedBuilder.from(message.embeds[id]), id];
-      }
-      id++;
-    }
-
-    return [new EmbedBuilder(), id];
-  }
-
-  getFieldNextId(fieldId: number, embed: EmbedBuilder): number {
-    if (fieldId !== -1) {
-      return fieldId;
-    }
-
-    return embed.data.fields?.length ?? 0;
-  }
-
-  getLineNextId(lineId: number, game: string, lines: string[]): number {
-    if (lineId !== -1) {
-      return lineId;
-    }
-
-    let id = 0;
-    for (const line of lines) {
-      if (line.startsWith(game)) {
-        return id;
-      }
-      id++;
-    }
-
-    return id;
   }
 }

@@ -7,7 +7,7 @@ export class ApPlayersController {
 
   @Get()
   findAll() {
-    return this.apPlayersService.findAll();
+    return this.apPlayersService.findAll({});
   }
 
   @Get(':id')

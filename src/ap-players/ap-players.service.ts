@@ -10,8 +10,9 @@ export class ApPlayersService {
     private apPlayerRepository: Repository<ApPlayer>,
   ) {}
 
-  async findAll() {
+  async findAll(filter: Partial<ApPlayer>) {
     return await this.apPlayerRepository.find({
+      where: { ...filter, event: { id: filter.event?.id } },
       relations: { event: true, games: true },
     });
   }
