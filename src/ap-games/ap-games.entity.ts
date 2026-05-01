@@ -27,6 +27,9 @@ export class ApGame {
   @Column()
   slot!: string;
 
+  @Column({ default: false })
+  isCoreGame: boolean = false;
+
   @ManyToOne(() => ApEvent, (event) => event.games)
   event!: ApEvent;
 

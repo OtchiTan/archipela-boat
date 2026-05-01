@@ -44,9 +44,14 @@ export class UpdateEmbedsUseCase {
       for (const player of players) {
         const lines = new Array<string>();
         for (const game of player.games) {
-          const apWorld = game.apworld
-            ? `[Apworld](${process.env.APP_URL}/ap-games/${game.id}/apworld) ✅`
-            : 'Apworld :x:';
+          let apWorld = '';
+          if (game.isCoreGame) {
+            apWorld = 'Core Game ⚙️';
+          } else {
+            apWorld = game.apworld
+              ? `[Apworld](${process.env.APP_URL}/ap-games/${game.id}/apworld) ✅`
+              : 'Apworld :x:';
+          }
 
           lines.push(
             `${game.name} - [YAML](${process.env.APP_URL}/ap-games/${game.id}/yaml) ✅ - ${apWorld}`,

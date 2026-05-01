@@ -7,6 +7,7 @@ import { ApEventsService } from 'src/ap-events/ap-events.service';
 import { ApPlayer } from 'src/ap-players/ap-players.entity';
 import { ApPlayersService } from 'src/ap-players/ap-players.service';
 import { RegisterDto } from 'src/commands/dto/register.dto';
+import { CoreGamesService } from 'src/core-games/core-games.service';
 import { parse as yamlParse } from 'yaml';
 import { ApGame } from '../ap-games.entity';
 import { ApGamesService } from '../ap-games.service';
@@ -20,6 +21,8 @@ export class RegisterGameUseCase {
     private apPlayersService: ApPlayersService,
     @Inject(forwardRef(() => ApEventsService))
     private apEventsService: ApEventsService,
+    @Inject(forwardRef(() => CoreGamesService))
+    private coreGamesService: CoreGamesService,
     private readonly httpService: HttpService,
   ) {}
 
@@ -117,6 +120,7 @@ export class RegisterGameUseCase {
       apGame.slot = yamlData.name;
       apGame.yaml = JSON.stringify(yamlData);
       apGame.apworld = apWorldFilePath;
+      apGame.isCoreGame = await this.coreGamesService.isCoreGame(apGame.name);
 
       apGame = await this.apGamesService.create(apGame);
     }

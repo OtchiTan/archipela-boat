@@ -3,13 +3,14 @@ import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { IntentsBitField } from 'discord.js';
 import { NecordModule } from 'necord';
+import { ApDeathlinksModule } from './ap-deathlinks/ap-deathlinks.module';
 import { ApEventsModule } from './ap-events/ap-events.module';
+import { ApGamesModule } from './ap-games/ap-games.module';
 import { ApPlayersModule } from './ap-players/ap-players.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { CommandsModule } from './commands/commands.module';
-import { ApGamesModule } from './ap-games/ap-games.module';
-import { ApDeathlinksModule } from './ap-deathlinks/ap-deathlinks.module';
+import { CoreGamesModule } from './core-games/core-games.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { ApDeathlinksModule } from './ap-deathlinks/ap-deathlinks.module';
     ApEventsModule,
     ApGamesModule,
     ApDeathlinksModule,
+    CoreGamesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
