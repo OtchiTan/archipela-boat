@@ -127,4 +127,10 @@ export class ApGamesService {
 
     await this.apEventsService.updateEmbeds(event);
   }
+
+  public async countGames(eventId: number): Promise<number> {
+    return await this.apGameRepository.count({
+      where: { event: { id: eventId } },
+    });
+  }
 }

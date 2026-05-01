@@ -1,5 +1,6 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { Client, EmbedBuilder } from 'discord.js';
+import { ApGamesService } from 'src/ap-games/ap-games.service';
 import { ApPlayersService } from 'src/ap-players/ap-players.service';
 import { ApEvent } from '../ap-events.entity';
 
@@ -8,6 +9,8 @@ export class UpdateEmbedsUseCase {
   constructor(
     @Inject(forwardRef(() => ApPlayersService))
     private apPlayersService: ApPlayersService,
+    @Inject(forwardRef(() => ApGamesService))
+    private apGamesService: ApGamesService,
     private readonly client: Client,
   ) {}
 
@@ -24,9 +27,10 @@ export class UpdateEmbedsUseCase {
       const firstEmbed = EmbedBuilder.from(message.embeds[0]);
 
       const playerCount = await this.apPlayersService.countPlayers(event.id);
+      const gameCount = await this.apGamesService.countGames(event.id);
 
       firstEmbed.setDescription(
-        `:busts_in_silhouette: ${playerCount} personne inscrite`,
+        `👥 ${playerCount} joueur·ses - 🎮 ${gameCount} jeux`,
       );
       firstEmbed.setFields([]);
 
