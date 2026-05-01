@@ -1,9 +1,16 @@
-import { forwardRef, Inject, Injectable, OnModuleInit } from '@nestjs/common';
+import {
+  forwardRef,
+  HttpException,
+  HttpStatus,
+  Inject,
+  Injectable,
+  OnModuleInit,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ApGamesService } from 'src/ap-games/ap-games.service';
 import { ApPlayersService } from 'src/ap-players/ap-players.service';
 import { StartApDto } from 'src/commands/dto/start-ap.dto';
-import { EntityNotFoundError, IsNull, Not, Repository } from 'typeorm';
+import { IsNull, Not, Repository } from 'typeorm';
 import { ApClient } from './ap-client';
 import { ApEvent } from './ap-events.entity';
 import { UpdateEmbedsUseCase } from './usecases/update-embeds.usecase';
@@ -41,15 +48,11 @@ export class ApEventsService implements OnModuleInit {
     });
   }
 
-  async findEvent(filter: Partial<ApEvent>): Promise<ApEvent> {
-    const event = await this.apEventRepository.findOne({
+  async findEvent(filter: Partial<ApEvent>): Promise<ApEvent | null> {
+    return await this.apEventRepository.findOne({
       where: filter,
       relations: { players: true, games: true },
     });
-    if (!event) {
-      throw new EntityNotFoundError(ApEvent, filter);
-    }
-    return event;
   }
 
   async createEvent(event: Partial<ApEvent>): Promise<ApEvent> {
@@ -63,6 +66,10 @@ export class ApEventsService implements OnModuleInit {
 
   public async startAp(startApDto: StartApDto) {
     const event = await this.findEvent({});
+
+    if (event === null) {
+      throw new HttpException("Event doesn't exist", HttpStatus.BAD_REQUEST);
+    }
 
     if (event.games.length === 0) {
       throw new Error("Il n'y à aucun joueurs enregistrés sur l'êvenement");

@@ -14,6 +14,10 @@ export class ApClient {
   async connectClient(url: string) {
     const apEvent = await this.apEventsService.findEvent({ url });
 
+    if (apEvent === null) {
+      throw new Error("Il n'y à pas d'êvenement démarré dans ce channel");
+    }
+
     await this.client.login(url, apEvent.games[0].slot ?? '', '', {
       tags: ['AP', 'Tracker'],
     });

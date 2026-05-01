@@ -32,14 +32,12 @@ export class RegisterGameUseCase {
     userId: string,
     userDisplayName: string,
   ) {
-    // Check if file is a yaml file
     if (!registerDto.yaml.name.endsWith('.yaml')) {
       throw new Error(
         "Le fichier fourni n'est pas un fichier yaml. Veuillez fournir un fichier yaml.",
       );
     }
 
-    // Check if apworld file is provided and if it is a apworld file
     if (registerDto.apworld && !registerDto.apworld.name.endsWith('.apworld')) {
       throw new Error(
         "Le fichier apworld fourni n'est pas un fichier apworld. Veuillez fournir un fichier .apworld valide.",
@@ -49,6 +47,10 @@ export class RegisterGameUseCase {
     const event = await this.apEventsService.findEvent({
       channelId: channelId,
     });
+
+    if (event === null) {
+      throw new Error("Il n'y à pas d'êvenement démarré dans ce channel");
+    }
 
     let yamlData: Record<string, string>;
 
@@ -84,36 +86,44 @@ export class RegisterGameUseCase {
       }
     }
 
-    let apPlayer = new ApPlayer();
-    try {
-      apPlayer = await this.apPlayersService.findOne({
-        event,
-        discord_id: userId,
-      });
-
+    let apPlayer = await this.apPlayersService.findOne({
+      event,
+      discord_id: userId,
+    });
+    if (apPlayer !== null) {
       apPlayer.username = userDisplayName;
       await this.apPlayersService.update(apPlayer.id, apPlayer);
-    } catch {
+    } else {
+      apPlayer = new ApPlayer();
       apPlayer.event = event;
       apPlayer.discord_id = userId;
       apPlayer.username = userDisplayName;
       apPlayer = await this.apPlayersService.create(apPlayer);
     }
 
-    let apGame = new ApGame();
-    try {
-      apGame = await this.apGamesService.findOne({
-        player: apPlayer,
-        event,
-        name: yamlData.game,
-        slot: yamlData.name,
-      });
+    let apGame = await this.apGamesService.findOne({
+      event,
+      slot: yamlData.name,
+    });
+    if (apGame !== null) {
+      if (apGame.player.discord_id !== userId) {
+        throw new Error(
+          'Un autre joueur utilise déjà ce slot (name), veuillez modifier votre yaml',
+        );
+      }
+
+      if (apGame.name !== yamlData.game) {
+        throw new Error(
+          'Un autre jeu utilise déjà ce slot (name), veuillez modifier votre yaml',
+        );
+      }
 
       apGame.yaml = JSON.stringify(yamlData);
       apGame.apworld = apWorldFilePath;
 
       await this.apGamesService.update(apGame.id, apGame);
-    } catch {
+    } else {
+      apGame = new ApGame();
       apGame.player = apPlayer;
       apGame.event = event;
       apGame.name = yamlData.game;

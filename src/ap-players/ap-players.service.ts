@@ -1,6 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { EntityNotFoundError, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { ApPlayer } from './ap-players.entity';
 
 @Injectable()
@@ -17,29 +17,37 @@ export class ApPlayersService {
     });
   }
 
-  async findOne(player: Partial<ApPlayer>): Promise<ApPlayer> {
-    const foundedPlayer = await this.apPlayerRepository.findOne({
+  async findOne(player: Partial<ApPlayer>): Promise<ApPlayer | null> {
+    return await this.apPlayerRepository.findOne({
       where: { ...player, event: { id: player.event?.id } },
       relations: { event: true, games: true },
     });
-    if (!foundedPlayer) {
-      throw new EntityNotFoundError(ApPlayer, player);
+  }
+
+  async create(data: Partial<ApPlayer>): Promise<ApPlayer> {
+    const createdPlayer = await this.apPlayerRepository.save(data);
+    const player = await this.findOne({ id: createdPlayer.id });
+
+    if (player === null) {
+      throw new HttpException("Can't create game", HttpStatus.BAD_REQUEST);
     }
-    return foundedPlayer;
+
+    return player;
   }
 
-  async create(player: Partial<ApPlayer>): Promise<ApPlayer> {
-    const createdPlayer = await this.apPlayerRepository.save(player);
-    return this.findOne({ id: createdPlayer.id });
-  }
-
-  async update(id: number, player: Partial<ApPlayer>): Promise<ApPlayer> {
+  async update(id: number, data: Partial<ApPlayer>): Promise<ApPlayer> {
     await this.apPlayerRepository.update(id, {
-      ...player,
+      ...data,
       games: undefined,
       event: undefined,
     });
-    return await this.findOne({ id });
+    const player = await this.findOne({ id });
+
+    if (player === null) {
+      throw new HttpException("Can't update game", HttpStatus.BAD_REQUEST);
+    }
+
+    return player;
   }
 
   public async countPlayers(eventId: number): Promise<number> {

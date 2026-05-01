@@ -14,7 +14,7 @@ import { ApDeathlinksService } from 'src/ap-deathlinks/ap-deathlinks.service';
 import { ApEvent } from 'src/ap-events/ap-events.entity';
 import { ApEventsService } from 'src/ap-events/ap-events.service';
 import { RegisterDto } from 'src/commands/dto/register.dto';
-import { EntityNotFoundError, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { stringify as yamlStringify } from 'yaml';
 import { ApGame } from './ap-games.entity';
 import { RegisterGameUseCase } from './usecases/register-game.usecase';
@@ -31,19 +31,19 @@ export class ApGamesService {
     @Inject() private readonly registerGameUseGame: RegisterGameUseCase,
   ) {}
 
-  async findOne(game: Partial<ApGame>): Promise<ApGame> {
-    const foundedGame = await this.apGameRepository.findOne({
+  async findOne(game: Partial<ApGame>): Promise<ApGame | null> {
+    return await this.apGameRepository.findOne({
       where: { ...game, event: { id: game.event?.id } },
       relations: { event: true, player: true },
     });
-    if (!foundedGame) {
-      throw new EntityNotFoundError(ApGame, game);
-    }
-    return foundedGame;
   }
 
   async getYamlFile(id: number): Promise<StreamableFile> {
     const apGame = await this.findOne({ id });
+
+    if (apGame === null) {
+      throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
+    }
 
     const folderPath = join(process.cwd(), '.tmp', 'yaml');
     const filePath = join(folderPath, `${apGame.name}.yaml`);
@@ -69,6 +69,10 @@ export class ApGamesService {
   async getApWorldFile(id: number): Promise<StreamableFile> {
     const apGame = await this.findOne({ id });
 
+    if (apGame === null) {
+      throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
+    }
+
     if (apGame.apworld === undefined) {
       throw new HttpException('NotFound', HttpStatus.NOT_FOUND);
     }
@@ -81,14 +85,26 @@ export class ApGamesService {
     });
   }
 
-  async create(game: Partial<ApGame>): Promise<ApGame> {
-    const createGame = await this.apGameRepository.save(game);
-    return this.findOne({ id: createGame.id });
+  async create(data: Partial<ApGame>): Promise<ApGame> {
+    const createGame = await this.apGameRepository.save(data);
+    const game = await this.findOne({ id: createGame.id });
+
+    if (game === null) {
+      throw new HttpException("Can't create game", HttpStatus.BAD_REQUEST);
+    }
+
+    return game;
   }
 
-  async update(id: number, game: Partial<ApGame>): Promise<ApGame> {
-    await this.apGameRepository.update(id, game);
-    return await this.findOne({ id });
+  async update(id: number, data: Partial<ApGame>): Promise<ApGame> {
+    await this.apGameRepository.update(id, data);
+    const game = await this.findOne({ id });
+
+    if (game === null) {
+      throw new HttpException("Can't update game", HttpStatus.BAD_REQUEST);
+    }
+
+    return game;
   }
 
   public async increaseDeathlinkCount(
@@ -101,6 +117,11 @@ export class ApGamesService {
       slot,
       event,
     });
+
+    if (game === null) {
+      throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
+    }
+
     const apDeathlink = new ApDeathlink();
     apDeathlink.game = game;
     apDeathlink.timestamp = new Date(timestamp);
@@ -124,6 +145,10 @@ export class ApGamesService {
     const event = await this.apEventsService.findEvent({
       channelId: channelId,
     });
+
+    if (event === null) {
+      throw new Error("Il n'y à pas d'êvenement démarré dans ce channel");
+    }
 
     await this.apEventsService.updateEmbeds(event);
   }
