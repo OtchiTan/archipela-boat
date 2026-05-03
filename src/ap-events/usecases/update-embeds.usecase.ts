@@ -30,9 +30,8 @@ export class UpdateEmbedsUseCase {
       const playerCount = await this.apPlayersService.countPlayers(event.id);
       const gameCount = await this.apGamesService.countGames(event.id);
 
-      firstEmbed.setDescription(
-        `👥 ${playerCount} joueur·ses - 🎮 ${gameCount} jeux`,
-      );
+      const description = `👥 ${playerCount} joueur·ses - 🎮 ${gameCount} jeux`;
+      firstEmbed.setDescription(description);
       firstEmbed.setFields([]);
 
       const embeds = new Array<EmbedBuilder>(firstEmbed);
@@ -66,7 +65,7 @@ export class UpdateEmbedsUseCase {
         if (fieldCount >= 25) {
           embedId++;
           fieldCount = 0;
-          const nextEmbed = new EmbedBuilder().setDescription('');
+          const nextEmbed = new EmbedBuilder().setDescription(description);
           embeds.push(nextEmbed);
         }
       }
