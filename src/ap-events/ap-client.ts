@@ -21,9 +21,13 @@ export class ApClient {
       throw new Error("Il n'y à pas d'êvenement démarré dans ce channel");
     }
 
-    await this.client.login(url, this.event.games[0].slot ?? '', '', {
-      tags: ['AP', 'Tracker', 'DeathLink'],
-    });
+    try {
+      await this.client.login(url, this.event.games[0].slot ?? '', '', {
+        tags: ['AP', 'Tracker', 'DeathLink'],
+      });
+    } catch {
+      this.apEventsService.closeApClient(url);
+    }
 
     this.client.deathLink.on('deathReceived', (slot, timestamp, cause) => {
       if (this.event === null) {
