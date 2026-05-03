@@ -2,6 +2,7 @@ import { forwardRef, Module } from '@nestjs/common';
 import { ApEventsModule } from 'src/ap-events/ap-events.module';
 import { ApGamesModule } from 'src/ap-games/ap-games.module';
 import { ClearMessagesCommand } from './clear-messages.command';
+import { GetFilesCommand } from './get-files.command';
 import { RegisterAdminCommand } from './register-admin.command';
 import { RegisterCommand } from './register.command';
 import { SetupApCommand } from './setup-ap.command';
@@ -18,6 +19,7 @@ import { UnregisterCommand } from './unregister.command';
     ClearMessagesCommand,
     StartApCommand,
     UnregisterCommand,
+    GetFilesCommand,
   ],
 })
 export class CommandsModule {}
