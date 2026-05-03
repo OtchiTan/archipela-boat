@@ -38,6 +38,10 @@ export class StartApCommand {
         });
       }
       this.logger.error(error);
+      return await interaction.reply({
+        flags: 'Ephemeral',
+        content: 'Euh... cpt',
+      });
     }
   }
 }

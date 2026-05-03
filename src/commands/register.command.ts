@@ -40,6 +40,10 @@ export class RegisterCommand {
         });
       }
       this.logger.error(error);
+      return await interaction.reply({
+        flags: 'Ephemeral',
+        content: 'Euh... cpt',
+      });
     }
 
     return await interaction.reply({

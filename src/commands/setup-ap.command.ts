@@ -33,7 +33,7 @@ export class SetupApCommand {
           .setTitle(`:island: ${options.name} :island:`)
           .setColor(0x000000)
           .setTimestamp(new Date())
-          .setDescription(`:busts_in_silhouette: 0 personne inscrite`),
+          .setDescription(`👥 0 joueur·ses - 🎮 0 jeux`),
       ],
       withResponse: true,
     });

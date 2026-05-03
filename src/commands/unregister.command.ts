@@ -42,6 +42,10 @@ export class UnregisterCommand {
         });
       }
       this.logger.error(error);
+      return await interaction.reply({
+        flags: 'Ephemeral',
+        content: 'Euh... cpt',
+      });
     }
 
     return await interaction.reply({
