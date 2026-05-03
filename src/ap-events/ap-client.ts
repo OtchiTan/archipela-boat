@@ -56,6 +56,12 @@ export class ApClient {
       });
     });
 
+    this.client.messages.on('tagsUpdated', (text, player, tags) => {
+      this.onClientConnected(text, player, tags).catch((err) => {
+        console.error(err);
+      });
+    });
+
     console.log('Client connected on url : ' + url);
   }
 
@@ -68,7 +74,11 @@ export class ApClient {
       return;
     }
 
-    await this.apGamesService.startSession(this.event, player.name);
+    await this.apGamesService.startSession(
+      this.event,
+      player.name,
+      tags.includes('DeathLink'),
+    );
   }
 
   async onClientDisconnected(text: string, player: Player) {

@@ -139,16 +139,25 @@ export class ApGamesService {
     await this.apDeathlinksService.create(apDeathlink);
   }
 
-  public async startSession(event: ApEvent, slot: string) {
+  public async startSession(event: ApEvent, slot: string, deathlink: boolean) {
     const game = await this.findOne({ slot, event });
 
     if (game === null) {
       throw new HttpException('Game Not Found', HttpStatus.NOT_FOUND);
     }
 
+    const currentSession = await this.apSessionsService.findCurrentSession(
+      game.id,
+    );
+
+    if (currentSession) {
+      await this.stopSession(event, slot);
+    }
+
     const apSession = new ApSession();
     apSession.start = new Date();
     apSession.game = game;
+    apSession.deathlink = deathlink;
 
     await this.apSessionsService.create(apSession);
   }

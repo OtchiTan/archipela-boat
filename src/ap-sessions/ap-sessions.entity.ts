@@ -12,6 +12,9 @@ export class ApSession {
   @Column({ nullable: true })
   end?: Date;
 
+  @Column({ default: false })
+  deathlink: boolean = false;
+
   @ManyToOne(() => ApGame, (game) => game.sessions)
   game!: ApGame;
 }
