@@ -10,6 +10,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { ApGamesService } from 'src/ap-games/ap-games.service';
 import { ApPlayersService } from 'src/ap-players/ap-players.service';
 import { StartApDto } from 'src/commands/dto/start-ap.dto';
+import { DiscordError } from 'src/core/discord.error';
 import { FindOptionsWhere, IsNull, Not, Repository } from 'typeorm';
 import { ApClient } from './ap-client';
 import { ApEvent } from './ap-events.entity';
@@ -72,7 +73,9 @@ export class ApEventsService implements OnModuleInit {
     }
 
     if (event.games.length === 0) {
-      throw new Error("Il n'y à aucun joueurs enregistrés sur l'êvenement");
+      throw new DiscordError(
+        "Il n'y à aucun joueurs enregistrés sur l'êvenement",
+      );
     }
 
     await this.updateEvent(event?.id, {

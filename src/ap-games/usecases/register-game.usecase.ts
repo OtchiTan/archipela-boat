@@ -8,6 +8,7 @@ import { ApPlayer } from 'src/ap-players/ap-players.entity';
 import { ApPlayersService } from 'src/ap-players/ap-players.service';
 import { RegisterDto } from 'src/commands/dto/register.dto';
 import { CoreGamesService } from 'src/core-games/core-games.service';
+import { DiscordError } from 'src/core/discord.error';
 import { parse as yamlParse } from 'yaml';
 import { ApGame } from '../ap-games.entity';
 import { ApGamesService } from '../ap-games.service';
@@ -33,13 +34,13 @@ export class RegisterGameUseCase {
     userDisplayName: string,
   ) {
     if (!registerDto.yaml.name.endsWith('.yaml')) {
-      throw new Error(
+      throw new DiscordError(
         "Le fichier fourni n'est pas un fichier yaml. Veuillez fournir un fichier yaml.",
       );
     }
 
     if (registerDto.apworld && !registerDto.apworld.name.endsWith('.apworld')) {
-      throw new Error(
+      throw new DiscordError(
         "Le fichier apworld fourni n'est pas un fichier apworld. Veuillez fournir un fichier .apworld valide.",
       );
     }
@@ -49,7 +50,9 @@ export class RegisterGameUseCase {
     });
 
     if (event === null) {
-      throw new Error("Il n'y à pas d'êvenement démarré dans ce channel");
+      throw new DiscordError(
+        "Il n'y à pas d'êvenement démarré dans ce channel",
+      );
     }
 
     let yamlData: Record<string, string>;
@@ -61,7 +64,7 @@ export class RegisterGameUseCase {
 
       yamlData = yamlParse(data) as Record<string, string>;
     } catch {
-      throw new Error('Impossible de récupérer le fichier yaml');
+      throw new DiscordError('Impossible de récupérer le fichier yaml');
     }
 
     let apWorldFilePath: string | undefined;
@@ -82,7 +85,7 @@ export class RegisterGameUseCase {
 
         response.data.pipe(writer);
       } catch {
-        throw new Error('Impossible de récupérer le fichier apworld');
+        throw new DiscordError('Impossible de récupérer le fichier apworld');
       }
     }
 
@@ -107,13 +110,13 @@ export class RegisterGameUseCase {
     });
     if (apGame !== null) {
       if (apGame.player.discord_id !== userId) {
-        throw new Error(
+        throw new DiscordError(
           'Un autre joueur utilise déjà ce slot (name), veuillez modifier votre yaml',
         );
       }
 
       if (apGame.name !== yamlData.game) {
-        throw new Error(
+        throw new DiscordError(
           'Un autre jeu utilise déjà ce slot (name), veuillez modifier votre yaml',
         );
       }

@@ -2,6 +2,7 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { Client, EmbedBuilder } from 'discord.js';
 import { ApGamesService } from 'src/ap-games/ap-games.service';
 import { ApPlayersService } from 'src/ap-players/ap-players.service';
+import { DiscordError } from 'src/core/discord.error';
 import { ApEvent } from '../ap-events.entity';
 
 @Injectable()
@@ -18,7 +19,7 @@ export class UpdateEmbedsUseCase {
     const channel = await this.client.channels.fetch(event.channelId);
 
     if (!channel || !channel.isTextBased()) {
-      throw new Error("Le channel n'est pas valide");
+      throw new DiscordError("Le channel n'est pas valide");
     }
 
     const message = await channel.messages.fetch(event.messageId!);

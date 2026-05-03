@@ -1,4 +1,4 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
 import {
   Context,
   Options,
@@ -6,10 +6,13 @@ import {
   type SlashCommandContext,
 } from 'necord';
 import { ApGamesService } from 'src/ap-games/ap-games.service';
+import { DiscordError } from 'src/core/discord.error';
 import { UnregisterDto } from './dto/unregister.dto';
 
 @Injectable()
 export class UnregisterCommand {
+  private logger: Logger = new Logger('UnregisterCommand');
+
   constructor(
     @Inject(forwardRef(() => ApGamesService))
     private apGamesService: ApGamesService,
@@ -32,12 +35,13 @@ export class UnregisterCommand {
         isAdmin === true,
       );
     } catch (error) {
-      if (error instanceof Error) {
+      if (error instanceof DiscordError) {
         return await interaction.reply({
           flags: 'Ephemeral',
           content: error.message,
         });
       }
+      this.logger.error(error);
     }
 
     return await interaction.reply({

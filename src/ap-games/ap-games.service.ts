@@ -18,6 +18,7 @@ import { ApSession } from 'src/ap-sessions/ap-sessions.entity';
 import { ApSessionsService } from 'src/ap-sessions/ap-sessions.service';
 import { RegisterDto } from 'src/commands/dto/register.dto';
 import { UnregisterDto } from 'src/commands/dto/unregister.dto';
+import { DiscordError } from 'src/core/discord.error';
 import { Repository } from 'typeorm';
 import { stringify as yamlStringify } from 'yaml';
 import { ApGame } from './ap-games.entity';
@@ -187,7 +188,9 @@ export class ApGamesService {
     });
 
     if (event === null) {
-      throw new Error("Il n'y à pas d'êvenement démarré dans ce channel");
+      throw new DiscordError(
+        "Il n'y à pas d'êvenement démarré dans ce channel",
+      );
     }
 
     await this.apEventsService.updateEmbeds(event);
@@ -202,17 +205,21 @@ export class ApGamesService {
     const event = await this.apEventsService.findEvent({ channelId });
 
     if (event === null) {
-      throw new Error("Il n'y à pas d'êvenement démarré dans ce channel");
+      throw new DiscordError(
+        "Il n'y à pas d'êvenement démarré dans ce channel",
+      );
     }
 
     const game = await this.findOne({ slot: unregisterDto.slot, event });
 
     if (game === null) {
-      throw new Error('Aucun jeu trouvé avec ce slot pour cet êvenement');
+      throw new DiscordError(
+        'Aucun jeu trouvé avec ce slot pour cet êvenement',
+      );
     }
 
     if (!isAdmin && userId !== game.player.discord_id) {
-      throw new Error("Ce slot ne t'appartient pas");
+      throw new DiscordError("Ce slot ne t'appartient pas");
     }
 
     const playerId = game.player.id;
@@ -222,12 +229,14 @@ export class ApGamesService {
     const player = await this.apPlayersService.findOne({ id: playerId });
 
     if (player === null) {
-      throw new Error(
+      throw new DiscordError(
         "Le joueur n'existe pas (ptdr si ce message sort un jour c'est que quelqu'un à fait joujoue avec la bdd",
       );
     }
 
-    await this.apPlayersService.delete(playerId);
+    if (player.games.length === 0) {
+      await this.apPlayersService.delete(playerId);
+    }
 
     await this.apEventsService.updateEmbeds(event);
   }

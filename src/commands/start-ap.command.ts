@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import {
   Context,
   Options,
@@ -6,10 +6,12 @@ import {
   type SlashCommandContext,
 } from 'necord';
 import { ApEventsService } from 'src/ap-events/ap-events.service';
+import { DiscordError } from 'src/core/discord.error';
 import { StartApDto } from './dto/start-ap.dto';
 
 @Injectable()
 export class StartApCommand {
+  private logger: Logger = new Logger('UnregisterCommand');
   constructor(@Inject() private apEventsService: ApEventsService) {}
 
   @SlashCommand({
@@ -29,12 +31,13 @@ export class StartApCommand {
         content: "L'êvenement à démarré",
       });
     } catch (error) {
-      if (error instanceof Error) {
+      if (error instanceof DiscordError) {
         return await interaction.reply({
           flags: 'Ephemeral',
           content: error.message,
         });
       }
+      this.logger.error(error);
     }
   }
 }

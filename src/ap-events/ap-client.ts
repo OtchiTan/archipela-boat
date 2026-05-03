@@ -2,6 +2,7 @@ import { Client, Player } from 'archipelago.js';
 import { ApEventsService } from 'src/ap-events/ap-events.service';
 import { ApGamesService } from 'src/ap-games/ap-games.service';
 import { ApPlayersService } from 'src/ap-players/ap-players.service';
+import { DiscordError } from 'src/core/discord.error';
 import { ApEvent } from './ap-events.entity';
 
 export class ApClient {
@@ -18,7 +19,9 @@ export class ApClient {
     this.event = await this.apEventsService.findEvent({ url });
 
     if (this.event === null) {
-      throw new Error("Il n'y à pas d'êvenement démarré dans ce channel");
+      throw new DiscordError(
+        "Il n'y à pas d'êvenement démarré dans ce channel",
+      );
     }
 
     try {
