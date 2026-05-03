@@ -7,9 +7,10 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ApGamesService } from 'src/ap-games/ap-games.service';
-import { PlayerPlaytimeDto } from 'src/ap-sessions/dto/player-playtime.dto';
+import { PlayerPlaytimeDto } from 'src/ap-players/dto/player-playtime.dto';
 import { Repository } from 'typeorm';
 import { ApPlayer } from './ap-players.entity';
+import { PlayerDeathlinkDto } from './dto/player-deathlink.dto';
 
 @Injectable()
 export class ApPlayersService {
@@ -97,5 +98,37 @@ export class ApPlayersService {
     }, 0);
 
     return playtime;
+  }
+
+  public async getDeathlinks(playerId: number): Promise<PlayerDeathlinkDto> {
+    const player = await this.findOne({ id: playerId });
+
+    if (player === null) {
+      throw new HttpException("Player doesn't exist", HttpStatus.NOT_FOUND);
+    }
+
+    const deathlinks = new PlayerDeathlinkDto();
+    deathlinks.playerId = player.id;
+    deathlinks.playerName = player.username;
+
+    const gameDeathLinksPromises = player.games.map((game) =>
+      this.apGamesService.getDeathlinks(game.id),
+    );
+
+    deathlinks.gamesDeathlinks = await Promise.all(gameDeathLinksPromises);
+    deathlinks.deathlink = deathlinks.gamesDeathlinks.reduce(
+      (accumulator, game) => {
+        return accumulator + game.deathlink;
+      },
+      0,
+    );
+    deathlinks.killCount = deathlinks.gamesDeathlinks.reduce(
+      (accumulator, game) => {
+        return accumulator + game.killCount;
+      },
+      0,
+    );
+
+    return deathlinks;
   }
 }

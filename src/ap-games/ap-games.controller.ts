@@ -15,8 +15,14 @@ export class ApGamesController {
   async getApWorld(@Param('id') id: number): Promise<StreamableFile> {
     return await this.apGamesService.getApWorldFile(id);
   }
+
   @Get(':id/playtime')
   getPlaytime(@Param('id') id: number): Promise<GamePlaytimeDto> {
     return this.apGamesService.getPlayTime(id);
+  }
+
+  @Get(':id/deathlinks')
+  async getDeathlinks(@Param('id') id: number) {
+    return this.apGamesService.getDeathlinks(id);
   }
 }

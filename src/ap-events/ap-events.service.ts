@@ -25,6 +25,7 @@ import { FindOptionsWhere, IsNull, Not, Repository } from 'typeorm';
 import { stringify as yamlStringify } from 'yaml';
 import { ApClient } from './ap-client';
 import { ApEvent } from './ap-events.entity';
+import { EventDeathlinkDto } from './dto/event-deathlink.dto';
 import { EventPlaytimeDto } from './dto/event-playtime.dto';
 import { UpdateEmbedsUseCase } from './usecases/update-embeds.usecase';
 
@@ -201,5 +202,37 @@ export class ApEventsService implements OnModuleInit {
     );
 
     return playtime;
+  }
+
+  public async getDeathlinks(eventId: number): Promise<EventDeathlinkDto> {
+    const event = await this.findEvent({ id: eventId });
+
+    if (event === null) {
+      throw new HttpException("Event doesn't exist", HttpStatus.NOT_FOUND);
+    }
+
+    const deathlinks = new EventDeathlinkDto();
+    deathlinks.eventId = event.id;
+    deathlinks.eventName = event.name;
+
+    const playerDeathLinksPromises = event.players.map((player) =>
+      this.apPlayersService.getDeathlinks(player.id),
+    );
+
+    deathlinks.playerDeathlinks = await Promise.all(playerDeathLinksPromises);
+    deathlinks.deathlink = deathlinks.playerDeathlinks.reduce(
+      (accumulator, player) => {
+        return accumulator + player.deathlink;
+      },
+      0,
+    );
+    deathlinks.killCount = deathlinks.playerDeathlinks.reduce(
+      (accumulator, player) => {
+        return accumulator + player.killCount;
+      },
+      0,
+    );
+
+    return deathlinks;
   }
 }

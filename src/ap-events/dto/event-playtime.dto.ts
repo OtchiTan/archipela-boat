@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { PlayerPlaytimeDto } from 'src/ap-sessions/dto/player-playtime.dto';
+import { PlayerPlaytimeDto } from 'src/ap-players/dto/player-playtime.dto';
 
 export class EventPlaytimeDto {
   @ApiProperty()

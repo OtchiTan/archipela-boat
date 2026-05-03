@@ -22,6 +22,7 @@ import { DiscordError } from 'src/core/discord.error';
 import { Repository } from 'typeorm';
 import { stringify as yamlStringify } from 'yaml';
 import { ApGame } from './ap-games.entity';
+import { GameDeathlinkDto } from './dto/game-deathlink.dto';
 import { GamePlaytimeDto } from './dto/game-playtime.dto';
 import { RegisterGameUseCase } from './usecases/register-game.usecase';
 
@@ -136,7 +137,7 @@ export class ApGamesService {
     apDeathlink.game = game;
     apDeathlink.timestamp = new Date(timestamp);
     apDeathlink.cause = cause;
-    apDeathlink.killcount =
+    apDeathlink.killCount =
       await this.apSessionsService.countDeathlinkKillcount(event.id);
     await this.apDeathlinksService.create(apDeathlink);
   }
@@ -273,5 +274,23 @@ export class ApGamesService {
     playtime.playtime = await this.apSessionsService.getPlaytime(gameId);
 
     return playtime;
+  }
+
+  public async getDeathlinks(gameId: number): Promise<GameDeathlinkDto> {
+    const game = await this.findOne({ id: gameId });
+
+    if (game === null) {
+      throw new HttpException("Game doesn't exist", HttpStatus.NOT_FOUND);
+    }
+
+    const deathlink = new GameDeathlinkDto();
+    deathlink.gameId = game.id;
+    deathlink.gameName = game.name;
+    deathlink.slot = game.slot;
+    deathlink.deathlink = await this.apDeathlinksService.countDeathlink(gameId);
+    deathlink.killCount =
+      await this.apDeathlinksService.countDeathlinkKillCount(gameId);
+
+    return deathlink;
   }
 }

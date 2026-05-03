@@ -13,7 +13,7 @@ export class ApDeathlink {
   cause?: string;
 
   @Column({ default: 0 })
-  killcount: number = 0;
+  killCount: number = 0;
 
   @ManyToOne(() => ApGame, (apGame) => apGame.deathlinks)
   game!: ApGame;

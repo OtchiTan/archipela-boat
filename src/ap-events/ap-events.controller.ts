@@ -24,4 +24,9 @@ export class ApEventsController {
   async getPlaytimes(@Param('id') id: number) {
     return this.apEventsService.getPlaytime(id);
   }
+
+  @Get(':id/deathlinks')
+  async getDeathlinks(@Param('id') id: number) {
+    return this.apEventsService.getDeathlinks(id);
+  }
 }

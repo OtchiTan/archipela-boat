@@ -13,4 +13,18 @@ export class ApDeathlinksService {
   async create(deathlink: Partial<ApDeathlink>): Promise<ApDeathlink> {
     return await this.apDeathlinkRepository.save(deathlink);
   }
+
+  async countDeathlink(gameId: number): Promise<number> {
+    return await this.apDeathlinkRepository.count({
+      where: { game: { id: gameId } },
+    });
+  }
+
+  async countDeathlinkKillCount(gameId: number): Promise<number> {
+    return (
+      (await this.apDeathlinkRepository.sum('killCount', {
+        game: { id: gameId },
+      })) ?? 0
+    );
+  }
 }

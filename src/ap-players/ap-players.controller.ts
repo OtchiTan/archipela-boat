@@ -1,5 +1,5 @@
 import { Controller, Get, Param } from '@nestjs/common';
-import { PlayerPlaytimeDto } from 'src/ap-sessions/dto/player-playtime.dto';
+import { PlayerPlaytimeDto } from 'src/ap-players/dto/player-playtime.dto';
 import { ApPlayersService } from './ap-players.service';
 
 @Controller('ap-players')
@@ -19,5 +19,10 @@ export class ApPlayersController {
   @Get(':id/playtime')
   getPlaytime(@Param('id') id: number): Promise<PlayerPlaytimeDto> {
     return this.apPlayersService.getPlayTime(id);
+  }
+
+  @Get(':id/deathlinks')
+  async getDeathlinks(@Param('id') id: number) {
+    return this.apPlayersService.getDeathlinks(id);
   }
 }
