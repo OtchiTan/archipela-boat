@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { GamePlaytimeDto } from './game-playtime.dto';
+import { GamePlaytimeDto } from '../../ap-games/dto/game-playtime.dto';
 
 export class PlayerPlaytimeDto {
   @ApiProperty()

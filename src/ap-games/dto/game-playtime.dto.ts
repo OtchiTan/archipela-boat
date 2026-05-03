@@ -5,6 +5,9 @@ export class GamePlaytimeDto {
   gameId!: number;
 
   @ApiProperty()
+  slot!: string;
+
+  @ApiProperty()
   gameName!: string;
 
   @ApiProperty()

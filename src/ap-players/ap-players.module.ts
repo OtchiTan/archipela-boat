@@ -1,12 +1,15 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ApSessionsModule } from 'src/ap-sessions/ap-sessions.module';
+import { ApGamesModule } from 'src/ap-games/ap-games.module';
 import { ApPlayersController } from './ap-players.controller';
 import { ApPlayer } from './ap-players.entity';
 import { ApPlayersService } from './ap-players.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([ApPlayer]), ApSessionsModule],
+  imports: [
+    TypeOrmModule.forFeature([ApPlayer]),
+    forwardRef(() => ApGamesModule),
+  ],
   controllers: [ApPlayersController],
   providers: [ApPlayersService],
   exports: [ApPlayersService],

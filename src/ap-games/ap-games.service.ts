@@ -22,6 +22,7 @@ import { DiscordError } from 'src/core/discord.error';
 import { Repository } from 'typeorm';
 import { stringify as yamlStringify } from 'yaml';
 import { ApGame } from './ap-games.entity';
+import { GamePlaytimeDto } from './dto/game-playtime.dto';
 import { RegisterGameUseCase } from './usecases/register-game.usecase';
 
 @Injectable()
@@ -245,5 +246,21 @@ export class ApGamesService {
     return await this.apGameRepository.count({
       where: { event: { id: eventId } },
     });
+  }
+
+  public async getPlayTime(gameId: number): Promise<GamePlaytimeDto> {
+    const game = await this.findOne({ id: gameId });
+
+    if (game === null) {
+      throw new HttpException("Game doesn't exist", HttpStatus.NOT_FOUND);
+    }
+
+    const playtime = new GamePlaytimeDto();
+    playtime.gameId = game.id;
+    playtime.gameName = game.name;
+    playtime.slot = game.slot;
+    playtime.playtime = await this.apSessionsService.getPlaytime(gameId);
+
+    return playtime;
   }
 }

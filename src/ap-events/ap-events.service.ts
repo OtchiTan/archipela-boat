@@ -25,6 +25,7 @@ import { FindOptionsWhere, IsNull, Not, Repository } from 'typeorm';
 import { stringify as yamlStringify } from 'yaml';
 import { ApClient } from './ap-client';
 import { ApEvent } from './ap-events.entity';
+import { EventPlaytimeDto } from './dto/event-playtime.dto';
 import { UpdateEmbedsUseCase } from './usecases/update-embeds.usecase';
 
 @Injectable()
@@ -169,12 +170,36 @@ export class ApEventsService implements OnModuleInit {
     const content = await zip.generateAsync({ type: 'blob' });
     writeFileSync(zipPath, Buffer.from(await content.arrayBuffer()));
 
-    console.log(content);
-
     const file = createReadStream(zipPath);
     return new StreamableFile(file, {
       type: 'application/zip',
       disposition: `attachment; filename="event-${event.id}.zip"`,
     });
+  }
+
+  public async getPlaytime(eventId: number): Promise<EventPlaytimeDto> {
+    const event = await this.findEvent({ id: eventId });
+
+    if (event === null) {
+      throw new HttpException("Event doesn't exist", HttpStatus.NOT_FOUND);
+    }
+
+    const playtime = new EventPlaytimeDto();
+    playtime.eventId = event.id;
+    playtime.eventName = event.name;
+
+    const playerPlaytimesPromises = event.players.map((player) =>
+      this.apPlayersService.getPlayTime(player.id),
+    );
+
+    playtime.playersPlaytime = await Promise.all(playerPlaytimesPromises);
+    playtime.playtime = playtime.playersPlaytime.reduce(
+      (accumulator, player) => {
+        return accumulator + player.playtime;
+      },
+      0,
+    );
+
+    return playtime;
   }
 }

@@ -46,12 +46,16 @@ export class ApSessionsService {
     return session;
   }
 
-  async getPlaytime(playerId: number) {
+  async getPlaytime(gameId: number): Promise<number> {
     const sessions = await this.apSessionRepository.find({
-      where: { game: { player: { id: playerId } } },
+      where: { game: { id: gameId }, end: Not(IsNull()) },
       relations: { game: true },
     });
 
-    return sessions;
+    return sessions.reduce((accumulator, session) => {
+      const start = session.start.getTime();
+      const end = session.end?.getTime() ?? 0;
+      return accumulator + (end - start);
+    }, 0);
   }
 }

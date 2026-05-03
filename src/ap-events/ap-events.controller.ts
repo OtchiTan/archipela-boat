@@ -19,4 +19,9 @@ export class ApEventsController {
   async getFiles(@Param('id') id: number) {
     return this.apEventsService.getEventFiles(id);
   }
+
+  @Get(':id/playtime')
+  async getPlaytimes(@Param('id') id: number) {
+    return this.apEventsService.getPlaytime(id);
+  }
 }
