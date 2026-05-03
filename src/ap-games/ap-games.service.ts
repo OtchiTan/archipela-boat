@@ -136,6 +136,8 @@ export class ApGamesService {
     apDeathlink.game = game;
     apDeathlink.timestamp = new Date(timestamp);
     apDeathlink.cause = cause;
+    apDeathlink.killcount =
+      await this.apSessionsService.countDeathlinkKillcount(event.id);
     await this.apDeathlinksService.create(apDeathlink);
   }
 

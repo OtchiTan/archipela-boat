@@ -58,4 +58,14 @@ export class ApSessionsService {
       return accumulator + (end - start);
     }, 0);
   }
+
+  async countDeathlinkKillcount(eventId: number): Promise<number> {
+    return await this.apSessionRepository.count({
+      where: {
+        deathlink: true,
+        end: IsNull(),
+        game: { event: { id: eventId } },
+      },
+    });
+  }
 }
