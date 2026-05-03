@@ -1,6 +1,7 @@
 import { ApDeathlink } from 'src/ap-deathlinks/ap-deathlinks.entity';
 import { ApEvent } from 'src/ap-events/ap-events.entity';
 import { ApPlayer } from 'src/ap-players/ap-players.entity';
+import { ApSession } from 'src/ap-sessions/ap-sessions.entity';
 import {
   Column,
   Entity,
@@ -41,4 +42,8 @@ export class ApGame {
   })
   @JoinColumn()
   deathlinks!: ApDeathlink[];
+
+  @OneToMany(() => ApSession, (session) => session.game, { cascade: true })
+  @JoinColumn()
+  sessions!: ApSession[];
 }

@@ -11,6 +11,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { CommandsModule } from './commands/commands.module';
 import { CoreGamesModule } from './core-games/core-games.module';
+import { ApSessionsModule } from './ap-sessions/ap-sessions.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { CoreGamesModule } from './core-games/core-games.module';
     ApGamesModule,
     ApDeathlinksModule,
     CoreGamesModule,
+    ApSessionsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -1,5 +1,14 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  forwardRef,
+  HttpException,
+  HttpStatus,
+  Inject,
+  Injectable,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { ApSessionsService } from 'src/ap-sessions/ap-sessions.service';
+import { GamePlaytimeDto } from 'src/ap-sessions/dto/game-playtime.dto';
+import { PlayerPlaytimeDto } from 'src/ap-sessions/dto/player-playtime.dto';
 import { Repository } from 'typeorm';
 import { ApPlayer } from './ap-players.entity';
 
@@ -8,6 +17,8 @@ export class ApPlayersService {
   constructor(
     @InjectRepository(ApPlayer)
     private apPlayerRepository: Repository<ApPlayer>,
+    @Inject(forwardRef(() => ApSessionsService))
+    private readonly apSessionsService: ApSessionsService,
   ) {}
 
   async findAll(filter: Partial<ApPlayer>) {
@@ -64,5 +75,39 @@ export class ApPlayersService {
     return await this.apPlayerRepository.count({
       where: { event: { id: eventId } },
     });
+  }
+
+  public async getPlayTime(playerId: number): Promise<PlayerPlaytimeDto> {
+    const player = await this.apPlayerRepository.findOne({
+      where: { id: playerId },
+      relations: { games: true },
+    });
+
+    if (player === null) {
+      throw new HttpException('Player not found', HttpStatus.NOT_FOUND);
+    }
+
+    const sessions = await this.apSessionsService.getPlaytime(player.id);
+
+    const playtime = new PlayerPlaytimeDto();
+    playtime.playerId = player.id;
+    playtime.playerName = player.username;
+
+    for (const session of sessions) {
+      let gameIndex = playtime.gamesPlaytime.findIndex(
+        (game) => game.gameId === session.game.id,
+      );
+
+      if (gameIndex === -1) {
+        const gamePlaytimeDto = new GamePlaytimeDto();
+        gamePlaytimeDto.gameId = session.game.id;
+        gamePlaytimeDto.gameName = session.game.name;
+        gameIndex = playtime.gamesPlaytime.push(gamePlaytimeDto) - 1;
+      }
+
+      playtime.gamesPlaytime[gameIndex].playtime += 1;
+    }
+
+    return playtime;
   }
 }

@@ -14,6 +14,8 @@ import { ApDeathlinksService } from 'src/ap-deathlinks/ap-deathlinks.service';
 import { ApEvent } from 'src/ap-events/ap-events.entity';
 import { ApEventsService } from 'src/ap-events/ap-events.service';
 import { ApPlayersService } from 'src/ap-players/ap-players.service';
+import { ApSession } from 'src/ap-sessions/ap-sessions.entity';
+import { ApSessionsService } from 'src/ap-sessions/ap-sessions.service';
 import { RegisterDto } from 'src/commands/dto/register.dto';
 import { UnregisterDto } from 'src/commands/dto/unregister.dto';
 import { Repository } from 'typeorm';
@@ -32,6 +34,8 @@ export class ApGamesService {
     private apPlayersService: ApPlayersService,
     @Inject(forwardRef(() => ApDeathlinksService))
     private apDeathlinksService: ApDeathlinksService,
+    @Inject(forwardRef(() => ApSessionsService))
+    private apSessionsService: ApSessionsService,
     @Inject() private readonly registerGameUseGame: RegisterGameUseCase,
   ) {}
 
@@ -131,6 +135,38 @@ export class ApGamesService {
     apDeathlink.timestamp = new Date(timestamp);
     apDeathlink.cause = cause;
     await this.apDeathlinksService.create(apDeathlink);
+  }
+
+  public async startSession(event: ApEvent, slot: string) {
+    const game = await this.findOne({ slot, event });
+
+    if (game === null) {
+      throw new HttpException('Game Not Found', HttpStatus.NOT_FOUND);
+    }
+
+    const apSession = new ApSession();
+    apSession.start = new Date();
+    apSession.game = game;
+
+    await this.apSessionsService.create(apSession);
+  }
+
+  public async stopSession(event: ApEvent, slot: string) {
+    const game = await this.findOne({ slot, event });
+
+    if (game === null) {
+      throw new HttpException('Game Not Found', HttpStatus.NOT_FOUND);
+    }
+
+    const session = await this.apSessionsService.findCurrentSession(game.id);
+
+    if (session === null) {
+      throw new HttpException('Session Not Found', HttpStatus.NOT_FOUND);
+    }
+
+    session.end = new Date();
+
+    await this.apSessionsService.update(session.id, session);
   }
 
   public async registerGame(
