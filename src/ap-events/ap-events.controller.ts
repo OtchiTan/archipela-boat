@@ -14,4 +14,9 @@ export class ApEventsController {
   async findAll() {
     return this.apEventsService.findAll();
   }
+
+  @Get(':id/files')
+  async getFiles(@Param('id') id: number) {
+    return this.apEventsService.getEventFiles(id);
+  }
 }
