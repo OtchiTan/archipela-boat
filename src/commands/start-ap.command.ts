@@ -24,7 +24,7 @@ export class StartApCommand {
     @Options() startApDto: StartApDto,
   ) {
     try {
-      await this.apEventsService.startAp(startApDto);
+      await this.apEventsService.startAp(interaction.channelId, startApDto);
 
       return await interaction.reply({
         flags: 'Ephemeral',

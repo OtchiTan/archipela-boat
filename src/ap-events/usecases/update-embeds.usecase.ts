@@ -30,9 +30,15 @@ export class UpdateEmbedsUseCase {
       const playerCount = await this.apPlayersService.countPlayers(event.id);
       const gameCount = await this.apGamesService.countGames(event.id);
 
-      const description = `👥 ${playerCount} joueur·ses - 🎮 ${gameCount} jeux`;
+      let description = `👥 ${playerCount} joueur·ses - 🎮 ${gameCount} jeux`;
+      if (event.startTime && event.url) {
+        description = description.concat(
+          `\nL'événement est démarré ! L'adresse est la suivante : ${event.url}`,
+        );
+      }
       firstEmbed.setDescription(description);
       firstEmbed.setFields([]);
+      firstEmbed.setColor(event.startTime ? 0x0bbd11 : 0x4287f5);
 
       const embeds = new Array<EmbedBuilder>(firstEmbed);
 

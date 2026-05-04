@@ -74,12 +74,16 @@ export class ApEventsService implements OnModuleInit {
   }
 
   async updateEvent(eventId: number, data: Partial<ApEvent>) {
-    console.log('Updating event with ID:', eventId, 'Data:', data);
     await this.apEventRepository.update(eventId, data);
+    const event = await this.findEvent({ id: eventId });
+    if (event === null) {
+      return;
+    }
+    await this.updateEmbeds(event);
   }
 
-  public async startAp(startApDto: StartApDto) {
-    const event = await this.findEvent({});
+  public async startAp(channelId: string, startApDto: StartApDto) {
+    const event = await this.findEvent({ channelId, endTime: IsNull() });
 
     if (event === null) {
       throw new HttpException("Event doesn't exist", HttpStatus.NOT_FOUND);
@@ -91,9 +95,9 @@ export class ApEventsService implements OnModuleInit {
       );
     }
 
-    await this.updateEvent(event?.id, {
+    await this.updateEvent(event.id, {
       url: startApDto.url,
-      startTime: new Date(),
+      startTime: event.startTime ?? new Date(),
     });
 
     await this.startNewApClient(startApDto.url);

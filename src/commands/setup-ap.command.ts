@@ -7,6 +7,7 @@ import {
   type SlashCommandContext,
 } from 'necord';
 import { ApEventsService } from 'src/ap-events/ap-events.service';
+import { IsNull } from 'typeorm';
 import { SetupApDto } from './dto/setup-ap.dto';
 
 @Injectable()
@@ -22,6 +23,18 @@ export class SetupApCommand {
     @Context() [interaction]: SlashCommandContext,
     @Options() options: SetupApDto,
   ) {
+    const alreadyExistingEvent = await this.apEventsService.findEvent({
+      channelId: interaction.channelId,
+      endTime: IsNull(),
+    });
+
+    if (alreadyExistingEvent) {
+      return await interaction.reply({
+        flags: 'Ephemeral',
+        content: 'Un événement à déjà commencé dans ce channel',
+      });
+    }
+
     const event = await this.apEventsService.createEvent({
       channelId: interaction.channelId,
       name: options.name,
@@ -30,8 +43,8 @@ export class SetupApCommand {
     const result = await interaction.reply({
       embeds: [
         new EmbedBuilder()
-          .setTitle(`:island: ${options.name} :island:`)
-          .setColor(0x000000)
+          .setTitle(`🏝️ ${options.name} 🏝️`)
+          .setColor(0x4287f5)
           .setTimestamp(new Date())
           .setDescription(`👥 0 joueur·ses - 🎮 0 jeux`),
       ],
