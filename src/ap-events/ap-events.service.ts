@@ -82,11 +82,29 @@ export class ApEventsService implements OnModuleInit {
     await this.updateEmbeds(event);
   }
 
+  public async stopAp(channelId: string) {
+    const event = await this.findEvent({ channelId, endTime: IsNull() });
+
+    if (event === null) {
+      throw new DiscordError(
+        "Il n'y à aucun événement à fermer dans ce channel",
+      );
+    }
+
+    await this.updateEvent(event.id, {
+      endTime: new Date(),
+    });
+
+    this.closeApClient(event.url ?? '');
+  }
+
   public async startAp(channelId: string, startApDto: StartApDto) {
     const event = await this.findEvent({ channelId, endTime: IsNull() });
 
     if (event === null) {
-      throw new HttpException("Event doesn't exist", HttpStatus.NOT_FOUND);
+      throw new DiscordError(
+        "Il n'y à aucun événement à démarrer dans ce channel",
+      );
     }
 
     if (event.games.length === 0) {

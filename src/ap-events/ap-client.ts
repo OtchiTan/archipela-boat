@@ -29,8 +29,33 @@ export class ApClient {
         tags: ['AP', 'Tracker', 'DeathLink'],
       });
     } catch {
+      await this.apEventsService.updateEvent(this.event.id, {
+        clientConnected: false,
+      });
       this.apEventsService.closeApClient(url);
+      return;
     }
+
+    await this.apEventsService.updateEvent(this.event.id, {
+      clientConnected: true,
+    });
+
+    this.client.socket.on('disconnected', () => {
+      if (this.event === null) {
+        return;
+      }
+
+      this.apEventsService
+        .updateEvent(this.event.id, {
+          clientConnected: false,
+        })
+        .then(() => {
+          this.apEventsService.closeApClient(url);
+        })
+        .catch((err) => {
+          console.error(err);
+        });
+    });
 
     this.client.deathLink.on('deathReceived', (slot, timestamp, cause) => {
       if (this.event === null) {

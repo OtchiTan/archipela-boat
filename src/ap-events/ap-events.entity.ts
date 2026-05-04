@@ -13,7 +13,7 @@ export class ApEvent {
   @PrimaryGeneratedColumn()
   id!: number;
 
-  @Column({ unique: true })
+  @Column()
   name!: string;
 
   @Column()
@@ -30,6 +30,9 @@ export class ApEvent {
 
   @Column({ nullable: true })
   endTime?: Date;
+
+  @Column({ default: false })
+  clientConnected: boolean = false;
 
   @OneToMany(() => ApPlayer, (apPlayer) => apPlayer.event)
   @JoinColumn()

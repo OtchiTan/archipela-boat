@@ -1,34 +1,25 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import {
-  Context,
-  Options,
-  SlashCommand,
-  type SlashCommandContext,
-} from 'necord';
+import { Context, SlashCommand, type SlashCommandContext } from 'necord';
 import { ApEventsService } from 'src/ap-events/ap-events.service';
 import { DiscordError } from 'src/core/discord.error';
-import { StartApDto } from './dto/start-ap.dto';
 
 @Injectable()
-export class StartApCommand {
+export class CloseApCommand {
   private logger: Logger = new Logger('UnregisterCommand');
   constructor(@Inject() private apEventsService: ApEventsService) {}
 
   @SlashCommand({
-    name: 'start-ap',
-    description: "Démarre l'archipelago",
+    name: 'close-ap',
+    description: "Stop l'archipelago",
     defaultMemberPermissions: 'Administrator',
   })
-  public async onStartAp(
-    @Context() [interaction]: SlashCommandContext,
-    @Options() startApDto: StartApDto,
-  ) {
+  public async onStopAp(@Context() [interaction]: SlashCommandContext) {
     try {
-      await this.apEventsService.startAp(interaction.channelId, startApDto);
+      await this.apEventsService.stopAp(interaction.channelId);
 
       return await interaction.reply({
         flags: 'Ephemeral',
-        content: "L'êvenement à démarré",
+        content: "L'êvenement est bien stoppé",
       });
     } catch (error) {
       if (error instanceof DiscordError) {

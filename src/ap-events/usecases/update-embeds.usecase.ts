@@ -1,5 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { Client, EmbedBuilder } from 'discord.js';
+import { Channel, Client, EmbedBuilder } from 'discord.js';
 import { ApGamesService } from 'src/ap-games/ap-games.service';
 import { ApPlayersService } from 'src/ap-players/ap-players.service';
 import { DiscordError } from 'src/core/discord.error';
@@ -16,7 +16,13 @@ export class UpdateEmbedsUseCase {
   ) {}
 
   public async updateMessageEmbeds(event: ApEvent) {
-    const channel = await this.client.channels.fetch(event.channelId);
+    let channel: Channel | null;
+    try {
+      channel = await this.client.channels.fetch(event.channelId);
+    } catch {
+      console.error("Le client discord JS n'est pas prêt");
+      return;
+    }
 
     if (!channel || !channel.isTextBased()) {
       throw new DiscordError("Le channel n'est pas valide");
@@ -31,14 +37,21 @@ export class UpdateEmbedsUseCase {
       const gameCount = await this.apGamesService.countGames(event.id);
 
       let description = `👥 ${playerCount} joueur·ses - 🎮 ${gameCount} jeux`;
-      if (event.startTime && event.url) {
+      if (event.startTime && event.url && !event.endTime) {
         description = description.concat(
           `\nL'événement est démarré ! L'adresse est la suivante : ${event.url}`,
         );
       }
       firstEmbed.setDescription(description);
       firstEmbed.setFields([]);
-      firstEmbed.setColor(event.startTime ? 0x0bbd11 : 0x4287f5);
+      let color = 0x4287f5;
+      if (event.startTime) {
+        color = event.clientConnected ? 0x0bbd11 : 0xb51705;
+      }
+      if (event.endTime) {
+        color = 0xebb821;
+      }
+      firstEmbed.setColor(color);
 
       const embeds = new Array<EmbedBuilder>(firstEmbed);
 
@@ -71,7 +84,9 @@ export class UpdateEmbedsUseCase {
         if (fieldCount >= 25) {
           embedId++;
           fieldCount = 0;
-          const nextEmbed = new EmbedBuilder().setDescription(description);
+          const nextEmbed = new EmbedBuilder()
+            .setDescription(description)
+            .setColor(color);
           embeds.push(nextEmbed);
         }
       }

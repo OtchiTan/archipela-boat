@@ -19,7 +19,7 @@ import { ApSessionsService } from 'src/ap-sessions/ap-sessions.service';
 import { RegisterDto } from 'src/commands/dto/register.dto';
 import { UnregisterDto } from 'src/commands/dto/unregister.dto';
 import { DiscordError } from 'src/core/discord.error';
-import { Repository } from 'typeorm';
+import { IsNull, Repository } from 'typeorm';
 import { stringify as yamlStringify } from 'yaml';
 import { ApGame } from './ap-games.entity';
 import { GameDeathlinkDto } from './dto/game-deathlink.dto';
@@ -198,6 +198,7 @@ export class ApGamesService {
 
     const event = await this.apEventsService.findEvent({
       channelId: channelId,
+      endTime: IsNull(),
     });
 
     if (event === null) {
