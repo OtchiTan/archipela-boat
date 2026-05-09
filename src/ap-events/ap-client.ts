@@ -7,7 +7,8 @@ import { ApEvent } from './ap-events.entity';
 
 export class ApClient {
   public client = new Client();
-  public event: ApEvent | null = null;
+  public event?: ApEvent;
+  public retryTimeout?: NodeJS.Timeout;
 
   constructor(
     private readonly apEventsService: ApEventsService,
@@ -16,9 +17,9 @@ export class ApClient {
   ) {}
 
   async connectClient(url: string) {
-    this.event = await this.apEventsService.findEvent({ url });
+    this.event = (await this.apEventsService.findEvent({ url })) ?? undefined;
 
-    if (this.event === null) {
+    if (this.event === undefined) {
       throw new DiscordError(
         "Il n'y à pas d'êvenement démarré dans ce channel",
       );
@@ -29,11 +30,12 @@ export class ApClient {
         tags: ['AP', 'Tracker', 'DeathLink'],
       });
     } catch {
-      await this.apEventsService.updateEvent(this.event.id, {
-        clientConnected: false,
-      });
-      this.apEventsService.closeApClient(url);
+      this.reconnectClient(url).catch((err) => console.error(err));
       return;
+    }
+
+    if (this.retryTimeout?.hasRef) {
+      clearTimeout(this.retryTimeout);
     }
 
     await this.apEventsService.updateEvent(this.event.id, {
@@ -41,24 +43,11 @@ export class ApClient {
     });
 
     this.client.socket.on('disconnected', () => {
-      if (this.event === null) {
-        return;
-      }
-
-      this.apEventsService
-        .updateEvent(this.event.id, {
-          clientConnected: false,
-        })
-        .then(() => {
-          this.apEventsService.closeApClient(url);
-        })
-        .catch((err) => {
-          console.error(err);
-        });
+      this.reconnectClient(url).catch((err) => console.error(err));
     });
 
     this.client.deathLink.on('deathReceived', (slot, timestamp, cause) => {
-      if (this.event === null) {
+      if (this.event === undefined) {
         return;
       }
 
@@ -91,7 +80,7 @@ export class ApClient {
   }
 
   async onClientConnected(text: string, player: Player, tags: string[]) {
-    if (this.event === null) {
+    if (this.event === undefined) {
       return;
     }
 
@@ -107,7 +96,7 @@ export class ApClient {
   }
 
   async onClientDisconnected(text: string, player: Player) {
-    if (this.event === null) {
+    if (this.event === undefined) {
       return;
     }
 
@@ -122,6 +111,42 @@ export class ApClient {
     return !tags.some((tag) =>
       ['TextOnly', 'Tracker', 'HintGame'].includes(tag),
     );
+  }
+
+  async reconnectClient(url: string) {
+    if (!this.event) {
+      return;
+    }
+
+    try {
+      await this.apEventsService.updateEvent(this.event.id, {
+        clientConnected: false,
+      });
+    } catch (error) {
+      console.error(error);
+    }
+
+    if (this.retryTimeout?.hasRef()) {
+      clearTimeout(this.retryTimeout);
+    }
+
+    this.retryTimeout = setTimeout(() => {
+      this.connectClient(url).catch((err) => console.error(err));
+    }, 3000);
+  }
+
+  async disconnectClient() {
+    if (!this.event) {
+      return;
+    }
+
+    await this.apEventsService.updateEvent(this.event.id, {
+      clientConnected: false,
+    });
+
+    if (this.retryTimeout?.hasRef()) {
+      clearTimeout(this.retryTimeout);
+    }
   }
 
   extractTags(str: string): string[] {

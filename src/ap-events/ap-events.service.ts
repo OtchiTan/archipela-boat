@@ -113,6 +113,12 @@ export class ApEventsService implements OnModuleInit {
       );
     }
 
+    const apClient = this.apClients.get(event.url ?? '');
+    if (apClient) {
+      await apClient.disconnectClient();
+      this.apClients.delete(event.url ?? '');
+    }
+
     await this.updateEvent(event.id, {
       url: startApDto.url,
       startTime: event.startTime ?? new Date(),
