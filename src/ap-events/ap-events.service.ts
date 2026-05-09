@@ -17,6 +17,7 @@ import {
 } from 'fs';
 import JSZip from 'jszip';
 import { basename, join } from 'path';
+import { ApDeathlinksService } from 'src/ap-deathlinks/ap-deathlinks.service';
 import { ApGamesService } from 'src/ap-games/ap-games.service';
 import { ApPlayersService } from 'src/ap-players/ap-players.service';
 import { StartApDto } from 'src/commands/dto/start-ap.dto';
@@ -39,6 +40,8 @@ export class ApEventsService implements OnModuleInit {
     private apPlayersService: ApPlayersService,
     @Inject(forwardRef(() => ApGamesService))
     private apGamesService: ApGamesService,
+    @Inject(forwardRef(() => ApDeathlinksService))
+    private apDeathlinksService: ApDeathlinksService,
     @Inject() private readonly updateEmbedsUseCase: UpdateEmbedsUseCase,
   ) {}
 
@@ -130,7 +133,7 @@ export class ApEventsService implements OnModuleInit {
   async startNewApClient(url: string) {
     const apClient = new ApClient(
       this,
-      this.apPlayersService,
+      this.apDeathlinksService,
       this.apGamesService,
     );
     this.apClients.set(url, apClient);

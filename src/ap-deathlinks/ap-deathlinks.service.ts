@@ -22,6 +22,13 @@ export class ApDeathlinksService {
     });
   }
 
+  async getLatestDeathlink(eventId: number): Promise<ApDeathlink | null> {
+    return await this.apDeathlinkRepository.findOne({
+      where: { game: { event: { id: eventId } } },
+      order: { id: 'DESC' },
+    });
+  }
+
   async create(data: Partial<ApDeathlink>): Promise<ApDeathlink | null> {
     const createdDeathlink = await this.apDeathlinkRepository.save(data);
     const deathlink = await this.findDeathlink({ id: createdDeathlink.id });

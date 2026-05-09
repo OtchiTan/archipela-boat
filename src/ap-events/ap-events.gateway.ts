@@ -51,6 +51,8 @@ export class ApEventsGateway implements OnGatewayConnection {
 
     const eventDeathlinks = await this.apEventsService.getDeathlinks(eventId);
 
-    this.namespace.to(String(eventId)).emit('deathlink-top', eventDeathlinks);
+    this.namespace
+      .to(String(eventId))
+      .emit('deathlink-top', eventDeathlinks, deathlink);
   }
 }

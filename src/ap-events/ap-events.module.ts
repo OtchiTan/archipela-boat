@@ -1,5 +1,6 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ApDeathlinksModule } from 'src/ap-deathlinks/ap-deathlinks.module';
 import { ApGamesModule } from 'src/ap-games/ap-games.module';
 import { ApPlayersModule } from 'src/ap-players/ap-players.module';
 import { ApEventsController } from './ap-events.controller';
@@ -13,6 +14,7 @@ import { UpdateEmbedsUseCase } from './usecases/update-embeds.usecase';
     TypeOrmModule.forFeature([ApEvent]),
     forwardRef(() => ApPlayersModule),
     forwardRef(() => ApGamesModule),
+    forwardRef(() => ApDeathlinksModule),
   ],
   controllers: [ApEventsController],
   providers: [ApEventsService, UpdateEmbedsUseCase, ApEventsGateway],

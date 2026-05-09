@@ -1,7 +1,7 @@
 import { Client, Player } from 'archipelago.js';
+import { ApDeathlinksService } from 'src/ap-deathlinks/ap-deathlinks.service';
 import { ApEventsService } from 'src/ap-events/ap-events.service';
 import { ApGamesService } from 'src/ap-games/ap-games.service';
-import { ApPlayersService } from 'src/ap-players/ap-players.service';
 import { DiscordError } from 'src/core/discord.error';
 import { ApEvent } from './ap-events.entity';
 
@@ -12,7 +12,7 @@ export class ApClient {
 
   constructor(
     private readonly apEventsService: ApEventsService,
-    private readonly apPlayersService: ApPlayersService,
+    private readonly apDeathlinksService: ApDeathlinksService,
     private readonly apGamesService: ApGamesService,
   ) {}
 
@@ -47,15 +47,9 @@ export class ApClient {
     });
 
     this.client.deathLink.on('deathReceived', (slot, timestamp, cause) => {
-      if (this.event === undefined) {
-        return;
-      }
-
-      this.apGamesService
-        .increaseDeathlinkCount(this.event, slot, timestamp, cause)
-        .catch((err) => {
-          console.log(err);
-        });
+      this.onDeathlinkReceived(slot, timestamp, cause).catch((err) =>
+        console.error(err),
+      );
     });
 
     this.client.messages.on('connected', (text, player, tags) => {
@@ -147,6 +141,31 @@ export class ApClient {
     if (this.retryTimeout?.hasRef()) {
       clearTimeout(this.retryTimeout);
     }
+  }
+
+  async onDeathlinkReceived(slot: string, timestamp: number, cause?: string) {
+    if (this.event === undefined) {
+      return;
+    }
+
+    const latestDeathlink = await this.apDeathlinksService.getLatestDeathlink(
+      this.event.id,
+    );
+
+    if (latestDeathlink) {
+      const start = latestDeathlink.timestamp.getTime();
+      const end = new Date(timestamp).getTime();
+      if (end - start < 2000) {
+        return;
+      }
+    }
+
+    await this.apGamesService.increaseDeathlinkCount(
+      this.event,
+      slot,
+      timestamp,
+      cause,
+    );
   }
 
   extractTags(str: string): string[] {
