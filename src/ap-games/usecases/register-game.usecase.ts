@@ -9,6 +9,7 @@ import { ApPlayersService } from 'src/ap-players/ap-players.service';
 import { RegisterDto } from 'src/commands/dto/register.dto';
 import { CoreGamesService } from 'src/core-games/core-games.service';
 import { DiscordError } from 'src/core/discord.error';
+import { IsNull, Not } from 'typeorm';
 import { parse as yamlParse } from 'yaml';
 import { ApGame } from '../ap-games.entity';
 import { ApGamesService } from '../ap-games.service';
@@ -47,6 +48,7 @@ export class RegisterGameUseCase {
 
     const event = await this.apEventsService.findEvent({
       channelId: channelId,
+      endTime: Not(IsNull()),
     });
 
     if (event === null) {
