@@ -116,6 +116,9 @@ export class ApPlayersService {
     );
 
     deathlinks.gamesDeathlinks = await Promise.all(gameDeathLinksPromises);
+    deathlinks.gamesDeathlinks = deathlinks.gamesDeathlinks.filter(
+      (game) => game.deathlink != 0,
+    );
     deathlinks.deathlink = deathlinks.gamesDeathlinks.reduce(
       (accumulator, game) => {
         return accumulator + game.deathlink;

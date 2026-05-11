@@ -251,6 +251,9 @@ export class ApEventsService implements OnModuleInit {
     );
 
     deathlinks.playerDeathlinks = await Promise.all(playerDeathLinksPromises);
+    deathlinks.playerDeathlinks = deathlinks.playerDeathlinks.filter(
+      (player) => player.deathlink != 0,
+    );
     deathlinks.deathlink = deathlinks.playerDeathlinks.reduce(
       (accumulator, player) => {
         return accumulator + player.deathlink;
