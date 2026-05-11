@@ -53,6 +53,6 @@ export class ApEventsGateway implements OnGatewayConnection {
 
     this.namespace
       .to(String(eventId))
-      .emit('deathlink-top', eventDeathlinks, deathlink);
+      .emit('deathlink-top', eventDeathlinks, deathlink, game); //FIXME: C'est vraiment dégueu va falloir faire plus propre
   }
 }
