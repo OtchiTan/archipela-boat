@@ -1,5 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { Channel, Client, EmbedBuilder } from 'discord.js';
+import { Channel, Client, EmbedBuilder, TextChannel } from 'discord.js';
 import { ApGamesService } from 'src/ap-games/ap-games.service';
 import { ApPlayersService } from 'src/ap-players/ap-players.service';
 import { DiscordError } from 'src/core/discord.error';
@@ -28,70 +28,91 @@ export class UpdateEmbedsUseCase {
       throw new DiscordError("Le channel n'est pas valide");
     }
 
-    const message = await channel.messages.fetch(event.messageId!);
+    const messages = await channel.messages.fetch();
 
-    if (message) {
-      const firstEmbed = EmbedBuilder.from(message.embeds[0]);
+    for (const [, message] of messages) {
+      if (message.author.bot) {
+        message.delete();
+      }
+    }
 
-      const playerCount = await this.apPlayersService.countPlayers(event.id);
-      const gameCount = await this.apGamesService.countGames(event.id);
+    const playerCount = await this.apPlayersService.countPlayers(event.id);
+    const gameCount = await this.apGamesService.countGames(event.id);
 
-      let description = `👥 ${playerCount} joueur·ses - 🎮 ${gameCount} jeux`;
-      if (event.startTime && event.url && !event.endTime) {
-        description = description.concat(
-          `\nL'événement est démarré ! L'adresse est la suivante : ${event.url}`,
+    const embeds = new Array<EmbedBuilder>(
+      this.createEmbed(event, playerCount, gameCount),
+    );
+
+    const players = await this.apPlayersService.findAll({ event });
+
+    let embedId = 0;
+    let fieldCount = 0;
+
+    for (const player of players) {
+      fieldCount++;
+      const lines = new Array<string>();
+
+      for (const game of player.games) {
+        let apWorld = '';
+        if (game.isCoreGame) {
+          apWorld = 'Core Game ⚙️';
+        } else {
+          apWorld = game.apworld
+            ? `[Apworld](${process.env.APP_URL}/ap-games/${game.id}/apworld) ✅`
+            : 'Apworld :x:';
+        }
+
+        lines.push(
+          `${game.name} - [YAML](${process.env.APP_URL}/ap-games/${game.id}/yaml) ✅ - ${apWorld}`,
         );
       }
-      firstEmbed.setDescription(description);
-      firstEmbed.setFields([]);
-      let color = 0x4287f5;
-      if (event.startTime) {
-        color = event.clientConnected ? 0x0bbd11 : 0xb51705;
-      }
-      if (event.endTime) {
-        color = 0xebb821;
-      }
-      firstEmbed.setColor(color);
 
-      const embeds = new Array<EmbedBuilder>(firstEmbed);
+      const fieldText = lines.join('\n');
 
-      const players = await this.apPlayersService.findAll({ event });
-
-      let embedId = 0;
-      let fieldCount = 0;
-
-      for (const player of players) {
-        const lines = new Array<string>();
-        for (const game of player.games) {
-          let apWorld = '';
-          if (game.isCoreGame) {
-            apWorld = 'Core Game ⚙️';
-          } else {
-            apWorld = game.apworld
-              ? `[Apworld](${process.env.APP_URL}/ap-games/${game.id}/apworld) ✅`
-              : 'Apworld :x:';
-          }
-
-          lines.push(
-            `${game.name} - [YAML](${process.env.APP_URL}/ap-games/${game.id}/yaml) ✅ - ${apWorld}`,
-          );
-        }
-        embeds[embedId].addFields({
-          name: player.username,
-          value: lines.join('\n'),
-        });
-        fieldCount++;
-        if (fieldCount >= 25) {
-          embedId++;
-          fieldCount = 0;
-          const nextEmbed = new EmbedBuilder()
-            .setDescription(description)
-            .setColor(color);
-          embeds.push(nextEmbed);
-        }
+      if (
+        embeds[embedId].length + fieldText.length >= 6000 ||
+        fieldCount >= 25
+      ) {
+        embedId++;
+        fieldCount = 0;
+        embeds.push(this.createEmbed(event, playerCount, gameCount));
       }
 
-      await message.edit({ embeds });
+      embeds[embedId].addFields({
+        name: player.username,
+        value: fieldText,
+      });
     }
+
+    for (const embed of embeds) {
+      if (channel.isTextBased()) {
+        (channel as TextChannel).send({ embeds: [embed] });
+      }
+    }
+  }
+
+  createEmbed(
+    event: ApEvent,
+    playerCount: number,
+    gameCount: number,
+  ): EmbedBuilder {
+    let description = `👥 ${playerCount} joueur·ses - 🎮 ${gameCount} jeux`;
+    if (event.startTime && event.url && !event.endTime) {
+      description = description.concat(
+        `\nL'événement est démarré ! L'adresse est la suivante : ${event.url}`,
+      );
+    }
+    let color = 0x4287f5;
+    if (event.startTime) {
+      color = event.clientConnected ? 0x0bbd11 : 0xb51705;
+    }
+    if (event.endTime) {
+      color = 0xebb821;
+    }
+    return new EmbedBuilder()
+      .setDescription(description)
+      .setColor(color)
+      .setTitle(`🏝️ ${event.name} 🏝️`)
+      .setTimestamp(new Date());
   }
 }

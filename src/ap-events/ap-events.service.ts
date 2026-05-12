@@ -82,7 +82,7 @@ export class ApEventsService implements OnModuleInit {
     if (event === null) {
       return;
     }
-    await this.updateEmbeds(event);
+    this.updateEmbeds(event).catch(err => console.error(err));
   }
 
   public async stopAp(channelId: string) {

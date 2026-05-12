@@ -207,7 +207,7 @@ export class ApGamesService {
       );
     }
 
-    await this.apEventsService.updateEmbeds(event);
+    this.apEventsService.updateEmbeds(event).catch(err => console.error(err));
   }
 
   public async unregisterGame(
@@ -252,7 +252,7 @@ export class ApGamesService {
       await this.apPlayersService.delete(playerId);
     }
 
-    await this.apEventsService.updateEmbeds(event);
+    this.apEventsService.updateEmbeds(event).catch(err => console.error(err));
   }
 
   public async countGames(eventId: number): Promise<number> {
