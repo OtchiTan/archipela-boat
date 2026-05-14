@@ -6,6 +6,7 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     logger: new ConsoleLogger({}),
+    cors: true,
   });
   const config = new DocumentBuilder()
     .setTitle('Cats example')
