@@ -1,6 +1,6 @@
 import { Controller, Get, Param, StreamableFile } from '@nestjs/common';
 import { ApGamesService } from './ap-games.service';
-import { GamePlaytimeDto } from './dto/game-playtime.dto';
+import { GameStatsDto } from './dto/game-stats.dto';
 
 @Controller('ap-games')
 export class ApGamesController {
@@ -16,13 +16,8 @@ export class ApGamesController {
     return await this.apGamesService.getApWorldFile(id);
   }
 
-  @Get(':id/playtime')
-  getPlaytime(@Param('id') id: number): Promise<GamePlaytimeDto> {
-    return this.apGamesService.getPlayTime(id);
-  }
-
-  @Get(':id/deathlinks')
-  async getDeathlinks(@Param('id') id: number) {
-    return this.apGamesService.getDeathlinks(id);
+  @Get(':id/stats')
+  getPlaytime(@Param('id') id: number): Promise<GameStatsDto> {
+    return this.apGamesService.getStats(id);
   }
 }

@@ -20,13 +20,8 @@ export class ApEventsController {
     return this.apEventsService.getEventFiles(id);
   }
 
-  @Get(':id/playtime')
+  @Get(':id/stats')
   async getPlaytimes(@Param('id') id: number) {
-    return this.apEventsService.getPlaytime(id);
-  }
-
-  @Get(':id/deathlinks')
-  async getDeathlinks(@Param('id') id: number) {
-    return this.apEventsService.getDeathlinks(id);
+    return this.apEventsService.getStats(id);
   }
 }

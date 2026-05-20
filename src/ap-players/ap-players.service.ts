@@ -7,10 +7,9 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ApGamesService } from 'src/ap-games/ap-games.service';
-import { PlayerPlaytimeDto } from 'src/ap-players/dto/player-playtime.dto';
-import { Repository } from 'typeorm';
+import { PlayerStatsDto } from 'src/ap-players/dto/player-stats.dto';
+import { FindOptionsWhere, Repository } from 'typeorm';
 import { ApPlayer } from './ap-players.entity';
-import { PlayerDeathlinkDto } from './dto/player-deathlink.dto';
 
 @Injectable()
 export class ApPlayersService {
@@ -21,9 +20,9 @@ export class ApPlayersService {
     private readonly apGamesService: ApGamesService,
   ) {}
 
-  async findAll(filter: Partial<ApPlayer>) {
+  async findAll(filter: FindOptionsWhere<ApPlayer>) {
     return await this.apPlayerRepository.find({
-      where: { ...filter, event: { id: filter.event?.id } },
+      where: filter,
       relations: { event: true, games: true },
     });
   }
@@ -77,61 +76,32 @@ export class ApPlayersService {
     });
   }
 
-  public async getPlayTime(playerId: number): Promise<PlayerPlaytimeDto> {
+  public async getStats(playerId: number): Promise<PlayerStatsDto> {
     const player = await this.findOne({ id: playerId });
 
     if (player === null) {
       throw new HttpException("Player doesn't exist", HttpStatus.NOT_FOUND);
     }
 
-    const playtime = new PlayerPlaytimeDto();
-    playtime.playerId = player.id;
-    playtime.playerName = player.username;
+    const stats = new PlayerStatsDto();
+    stats.playerId = player.id;
+    stats.playerName = player.username;
 
-    const gamePlaytimesPromises = player.games.map((game) =>
-      this.apGamesService.getPlayTime(game.id),
+    const gameStatsPromises = player.games.map((game) =>
+      this.apGamesService.getStats(game.id),
     );
 
-    playtime.gamesPlaytime = await Promise.all(gamePlaytimesPromises);
-    playtime.playtime = playtime.gamesPlaytime.reduce((accumulator, game) => {
+    stats.gamesStats = await Promise.all(gameStatsPromises);
+    stats.playtime = stats.gamesStats.reduce((accumulator, game) => {
       return accumulator + game.playtime;
     }, 0);
+    stats.deathlink = stats.gamesStats.reduce((accumulator, game) => {
+      return accumulator + game.deathlink;
+    }, 0);
+    stats.killCount = stats.gamesStats.reduce((accumulator, game) => {
+      return accumulator + game.killCount;
+    }, 0);
 
-    return playtime;
-  }
-
-  public async getDeathlinks(playerId: number): Promise<PlayerDeathlinkDto> {
-    const player = await this.findOne({ id: playerId });
-
-    if (player === null) {
-      throw new HttpException("Player doesn't exist", HttpStatus.NOT_FOUND);
-    }
-
-    const deathlinks = new PlayerDeathlinkDto();
-    deathlinks.playerId = player.id;
-    deathlinks.playerName = player.username;
-
-    const gameDeathLinksPromises = player.games.map((game) =>
-      this.apGamesService.getDeathlinks(game.id),
-    );
-
-    deathlinks.gamesDeathlinks = await Promise.all(gameDeathLinksPromises);
-    deathlinks.gamesDeathlinks = deathlinks.gamesDeathlinks.filter(
-      (game) => game.deathlink != 0,
-    );
-    deathlinks.deathlink = deathlinks.gamesDeathlinks.reduce(
-      (accumulator, game) => {
-        return accumulator + game.deathlink;
-      },
-      0,
-    );
-    deathlinks.killCount = deathlinks.gamesDeathlinks.reduce(
-      (accumulator, game) => {
-        return accumulator + game.killCount;
-      },
-      0,
-    );
-
-    return deathlinks;
+    return stats;
   }
 }

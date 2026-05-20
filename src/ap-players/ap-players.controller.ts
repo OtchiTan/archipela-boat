@@ -1,14 +1,17 @@
 import { Controller, Get, Param } from '@nestjs/common';
-import { PlayerPlaytimeDto } from 'src/ap-players/dto/player-playtime.dto';
 import { ApPlayersService } from './ap-players.service';
+import { GetPlayersDto } from './dto/get-players.dto';
+import { PlayerStatsDto } from './dto/player-stats.dto';
 
 @Controller('ap-players')
 export class ApPlayersController {
   constructor(private readonly apPlayersService: ApPlayersService) {}
 
   @Get()
-  findAll() {
-    return this.apPlayersService.findAll({});
+  findAll(getPlayersDto: GetPlayersDto) {
+    return this.apPlayersService.findAll({
+      event: { id: getPlayersDto.eventId },
+    });
   }
 
   @Get(':id')
@@ -17,12 +20,7 @@ export class ApPlayersController {
   }
 
   @Get(':id/playtime')
-  getPlaytime(@Param('id') id: number): Promise<PlayerPlaytimeDto> {
-    return this.apPlayersService.getPlayTime(id);
-  }
-
-  @Get(':id/deathlinks')
-  async getDeathlinks(@Param('id') id: number) {
-    return this.apPlayersService.getDeathlinks(id);
+  getPlaytime(@Param('id') id: number): Promise<PlayerStatsDto> {
+    return this.apPlayersService.getStats(id);
   }
 }

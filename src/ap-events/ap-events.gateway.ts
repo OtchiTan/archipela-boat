@@ -49,10 +49,10 @@ export class ApEventsGateway implements OnGatewayConnection {
 
     const eventId = game.event.id;
 
-    const eventDeathlinks = await this.apEventsService.getDeathlinks(eventId);
+    const eventStats = await this.apEventsService.getStats(eventId);
 
     this.namespace
       .to(String(eventId))
-      .emit('deathlink-top', eventDeathlinks, deathlink, game); //FIXME: C'est vraiment dégueu va falloir faire plus propre
+      .emit('deathlink-top', eventStats, deathlink, game); //FIXME: C'est vraiment dégueu va falloir faire plus propre
   }
 }

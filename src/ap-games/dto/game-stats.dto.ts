@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class GamePlaytimeDto {
+export class GameStatsDto {
   @ApiProperty()
   gameId!: number;
 
@@ -12,4 +12,10 @@ export class GamePlaytimeDto {
 
   @ApiProperty()
   playtime: number = 0;
+
+  @ApiProperty()
+  deathlink: number = 0;
+
+  @ApiProperty()
+  killCount: number = 0;
 }

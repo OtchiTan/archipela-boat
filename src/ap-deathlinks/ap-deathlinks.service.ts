@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { ApEventsGateway } from 'src/ap-events/ap-events.gateway';
 import { FindOptionsWhere, Repository } from 'typeorm';
 import { ApDeathlink } from './ap-deathlinks.entity';
+import { getDeathlinksDto } from './dto/get-deathlinks.dto';
 
 @Injectable()
 export class ApDeathlinksService {
@@ -12,6 +13,15 @@ export class ApDeathlinksService {
     @Inject(forwardRef(() => ApEventsGateway))
     private readonly apEventsGateway: ApEventsGateway,
   ) {}
+
+  async getAllDeathlinks(
+    getDeathlinksDto: getDeathlinksDto,
+  ): Promise<ApDeathlink[]> {
+    return await this.apDeathlinkRepository.find({
+      where: { game: { event: { id: getDeathlinksDto.eventId } } },
+      relations: { game: { player: true } },
+    });
+  }
 
   async findDeathlink(
     filter: FindOptionsWhere<ApDeathlink>,

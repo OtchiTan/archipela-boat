@@ -26,8 +26,7 @@ import { FindOptionsWhere, IsNull, Not, Repository } from 'typeorm';
 import { stringify as yamlStringify } from 'yaml';
 import { ApClient } from './ap-client';
 import { ApEvent } from './ap-events.entity';
-import { EventDeathlinkDto } from './dto/event-deathlink.dto';
-import { EventPlaytimeDto } from './dto/event-playtime.dto';
+import { EventStatsDto } from './dto/event-stats.dto';
 import { UpdateEmbedsUseCase } from './usecases/update-embeds.usecase';
 
 @Injectable()
@@ -82,7 +81,7 @@ export class ApEventsService implements OnModuleInit {
     if (event === null) {
       return;
     }
-    this.updateEmbeds(event).catch(err => console.error(err));
+    this.updateEmbeds(event).catch((err) => console.error(err));
   }
 
   public async stopAp(channelId: string) {
@@ -209,64 +208,32 @@ export class ApEventsService implements OnModuleInit {
     });
   }
 
-  public async getPlaytime(eventId: number): Promise<EventPlaytimeDto> {
+  public async getStats(eventId: number): Promise<EventStatsDto> {
     const event = await this.findEvent({ id: eventId });
 
     if (event === null) {
       throw new HttpException("Event doesn't exist", HttpStatus.NOT_FOUND);
     }
 
-    const playtime = new EventPlaytimeDto();
-    playtime.eventId = event.id;
-    playtime.eventName = event.name;
+    const stats = new EventStatsDto();
+    stats.eventId = event.id;
+    stats.eventName = event.name;
 
-    const playerPlaytimesPromises = event.players.map((player) =>
-      this.apPlayersService.getPlayTime(player.id),
+    const playerStatsPromises = event.players.map((player) =>
+      this.apPlayersService.getStats(player.id),
     );
 
-    playtime.playersPlaytime = await Promise.all(playerPlaytimesPromises);
-    playtime.playtime = playtime.playersPlaytime.reduce(
-      (accumulator, player) => {
-        return accumulator + player.playtime;
-      },
-      0,
-    );
+    stats.playersStats = await Promise.all(playerStatsPromises);
+    stats.playtime = stats.playersStats.reduce((accumulator, game) => {
+      return accumulator + game.playtime;
+    }, 0);
+    stats.deathlink = stats.playersStats.reduce((accumulator, game) => {
+      return accumulator + game.deathlink;
+    }, 0);
+    stats.killCount = stats.playersStats.reduce((accumulator, game) => {
+      return accumulator + game.killCount;
+    }, 0);
 
-    return playtime;
-  }
-
-  public async getDeathlinks(eventId: number): Promise<EventDeathlinkDto> {
-    const event = await this.findEvent({ id: eventId });
-
-    if (event === null) {
-      throw new HttpException("Event doesn't exist", HttpStatus.NOT_FOUND);
-    }
-
-    const deathlinks = new EventDeathlinkDto();
-    deathlinks.eventId = event.id;
-    deathlinks.eventName = event.name;
-
-    const playerDeathLinksPromises = event.players.map((player) =>
-      this.apPlayersService.getDeathlinks(player.id),
-    );
-
-    deathlinks.playerDeathlinks = await Promise.all(playerDeathLinksPromises);
-    deathlinks.playerDeathlinks = deathlinks.playerDeathlinks.filter(
-      (player) => player.deathlink != 0,
-    );
-    deathlinks.deathlink = deathlinks.playerDeathlinks.reduce(
-      (accumulator, player) => {
-        return accumulator + player.deathlink;
-      },
-      0,
-    );
-    deathlinks.killCount = deathlinks.playerDeathlinks.reduce(
-      (accumulator, player) => {
-        return accumulator + player.killCount;
-      },
-      0,
-    );
-
-    return deathlinks;
+    return stats;
   }
 }

@@ -32,7 +32,7 @@ export class UpdateEmbedsUseCase {
 
     for (const [, message] of messages) {
       if (message.author.bot) {
-        message.delete();
+        await message.delete();
       }
     }
 
@@ -43,7 +43,9 @@ export class UpdateEmbedsUseCase {
       this.createEmbed(event, playerCount, gameCount),
     );
 
-    const players = await this.apPlayersService.findAll({ event });
+    const players = await this.apPlayersService.findAll({
+      event: { id: event.id },
+    });
 
     let embedId = 0;
     let fieldCount = 0;

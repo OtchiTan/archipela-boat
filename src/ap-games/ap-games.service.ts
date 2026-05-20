@@ -22,8 +22,7 @@ import { DiscordError } from 'src/core/discord.error';
 import { IsNull, Repository } from 'typeorm';
 import { stringify as yamlStringify } from 'yaml';
 import { ApGame } from './ap-games.entity';
-import { GameDeathlinkDto } from './dto/game-deathlink.dto';
-import { GamePlaytimeDto } from './dto/game-playtime.dto';
+import { GameStatsDto } from './dto/game-stats.dto';
 import { RegisterGameUseCase } from './usecases/register-game.usecase';
 
 @Injectable()
@@ -207,7 +206,7 @@ export class ApGamesService {
       );
     }
 
-    this.apEventsService.updateEmbeds(event).catch(err => console.error(err));
+    this.apEventsService.updateEmbeds(event).catch((err) => console.error(err));
   }
 
   public async unregisterGame(
@@ -252,7 +251,7 @@ export class ApGamesService {
       await this.apPlayersService.delete(playerId);
     }
 
-    this.apEventsService.updateEmbeds(event).catch(err => console.error(err));
+    this.apEventsService.updateEmbeds(event).catch((err) => console.error(err));
   }
 
   public async countGames(eventId: number): Promise<number> {
@@ -261,37 +260,22 @@ export class ApGamesService {
     });
   }
 
-  public async getPlayTime(gameId: number): Promise<GamePlaytimeDto> {
+  public async getStats(gameId: number): Promise<GameStatsDto> {
     const game = await this.findOne({ id: gameId });
 
     if (game === null) {
       throw new HttpException("Game doesn't exist", HttpStatus.NOT_FOUND);
     }
 
-    const playtime = new GamePlaytimeDto();
+    const playtime = new GameStatsDto();
     playtime.gameId = game.id;
     playtime.gameName = game.name;
     playtime.slot = game.slot;
     playtime.playtime = await this.apSessionsService.getPlaytime(gameId);
-
-    return playtime;
-  }
-
-  public async getDeathlinks(gameId: number): Promise<GameDeathlinkDto> {
-    const game = await this.findOne({ id: gameId });
-
-    if (game === null) {
-      throw new HttpException("Game doesn't exist", HttpStatus.NOT_FOUND);
-    }
-
-    const deathlink = new GameDeathlinkDto();
-    deathlink.gameId = game.id;
-    deathlink.gameName = game.name;
-    deathlink.slot = game.slot;
-    deathlink.deathlink = await this.apDeathlinksService.countDeathlink(gameId);
-    deathlink.killCount =
+    playtime.deathlink = await this.apDeathlinksService.countDeathlink(gameId);
+    playtime.killCount =
       await this.apDeathlinksService.countDeathlinkKillCount(gameId);
 
-    return deathlink;
+    return playtime;
   }
 }

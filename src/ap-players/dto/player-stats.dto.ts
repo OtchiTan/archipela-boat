@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { GameDeathlinkDto } from 'src/ap-games/dto/game-deathlink.dto';
+import { GameStatsDto } from '../../ap-games/dto/game-stats.dto';
 
-export class PlayerDeathlinkDto {
+export class PlayerStatsDto {
   @ApiProperty()
   playerId!: number;
 
@@ -9,7 +9,10 @@ export class PlayerDeathlinkDto {
   playerName!: string;
 
   @ApiProperty()
-  gamesDeathlinks: GameDeathlinkDto[] = [];
+  gamesStats: GameStatsDto[] = [];
+
+  @ApiProperty()
+  playtime: number = 0;
 
   @ApiProperty()
   deathlink: number = 0;
