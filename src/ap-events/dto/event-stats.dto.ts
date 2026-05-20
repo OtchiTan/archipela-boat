@@ -12,6 +12,12 @@ export class EventStatsDto {
   playersStats: PlayerStatsDto[] = [];
 
   @ApiProperty()
+  startTime?: Date;
+
+  @ApiProperty()
+  endTime?: Date;
+
+  @ApiProperty()
   playtime: number = 0;
 
   @ApiProperty()

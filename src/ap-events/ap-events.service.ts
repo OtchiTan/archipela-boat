@@ -218,6 +218,8 @@ export class ApEventsService implements OnModuleInit {
     const stats = new EventStatsDto();
     stats.eventId = event.id;
     stats.eventName = event.name;
+    stats.startTime = event.startTime;
+    stats.endTime = event.endTime;
 
     const playerStatsPromises = event.players.map((player) =>
       this.apPlayersService.getStats(player.id),
