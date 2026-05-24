@@ -1,4 +1,5 @@
 import { ApGame } from 'src/ap-games/ap-games.entity';
+import { ApMessages } from 'src/ap-messages/ap-messages.entity';
 import { ApPlayer } from 'src/ap-players/ap-players.entity';
 import {
   Column,
@@ -20,9 +21,6 @@ export class ApEvent {
   channelId!: string;
 
   @Column({ nullable: true })
-  messageId?: string;
-
-  @Column({ nullable: true })
   url?: string;
 
   @Column({ nullable: true })
@@ -33,6 +31,10 @@ export class ApEvent {
 
   @Column({ default: false })
   clientConnected: boolean = false;
+
+  @OneToMany(() => ApMessages, (apMessages) => apMessages.event)
+  @JoinColumn()
+  messages!: ApMessages[];
 
   @OneToMany(() => ApPlayer, (apPlayer) => apPlayer.event)
   @JoinColumn()

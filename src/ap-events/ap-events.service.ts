@@ -23,6 +23,7 @@ import { ApPlayersService } from 'src/ap-players/ap-players.service';
 import { StartApDto } from 'src/commands/dto/start-ap.dto';
 import { DiscordError } from 'src/core/discord.error';
 import { FindOptionsWhere, IsNull, Not, Repository } from 'typeorm';
+import { QueryDeepPartialEntity } from 'typeorm/browser';
 import { stringify as yamlStringify } from 'yaml';
 import { ApClient } from './ap-client';
 import { ApEvent } from './ap-events.entity';
@@ -67,7 +68,7 @@ export class ApEventsService implements OnModuleInit {
   async findEvent(filter: FindOptionsWhere<ApEvent>): Promise<ApEvent | null> {
     return await this.apEventRepository.findOne({
       where: filter,
-      relations: { players: true, games: true },
+      relations: { players: true, games: true, messages: true },
     });
   }
 
@@ -75,7 +76,7 @@ export class ApEventsService implements OnModuleInit {
     return await this.apEventRepository.save(event);
   }
 
-  async updateEvent(eventId: number, data: Partial<ApEvent>) {
+  async updateEvent(eventId: number, data: QueryDeepPartialEntity<ApEvent>) {
     await this.apEventRepository.update(eventId, data);
     const event = await this.findEvent({ id: eventId });
     if (event === null) {
@@ -95,6 +96,7 @@ export class ApEventsService implements OnModuleInit {
 
     await this.updateEvent(event.id, {
       endTime: new Date(),
+      url: undefined,
     });
 
     this.closeApClient(event.url ?? '');

@@ -1,6 +1,7 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { ApEventsModule } from 'src/ap-events/ap-events.module';
 import { ApGamesModule } from 'src/ap-games/ap-games.module';
+import { ApMessagesModule } from 'src/ap-messages/ap-messages.module';
 import { ClearMessagesCommand } from './clear-messages.command';
 import { CloseApCommand } from './close-ap.command';
 import { GetFilesCommand } from './get-files.command';
@@ -12,7 +13,11 @@ import { UnregisterCommand } from './unregister.command';
 import { UpdateMessageCommand } from './update-message.command';
 
 @Module({
-  imports: [forwardRef(() => ApEventsModule), forwardRef(() => ApGamesModule)],
+  imports: [
+    forwardRef(() => ApEventsModule),
+    forwardRef(() => ApGamesModule),
+    forwardRef(() => ApMessagesModule),
+  ],
   controllers: [],
   providers: [
     RegisterCommand,

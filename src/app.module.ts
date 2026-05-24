@@ -6,12 +6,13 @@ import { NecordModule } from 'necord';
 import { ApDeathlinksModule } from './ap-deathlinks/ap-deathlinks.module';
 import { ApEventsModule } from './ap-events/ap-events.module';
 import { ApGamesModule } from './ap-games/ap-games.module';
+import { ApMessagesModule } from './ap-messages/ap-messages.module';
 import { ApPlayersModule } from './ap-players/ap-players.module';
+import { ApSessionsModule } from './ap-sessions/ap-sessions.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { CommandsModule } from './commands/commands.module';
 import { CoreGamesModule } from './core-games/core-games.module';
-import { ApSessionsModule } from './ap-sessions/ap-sessions.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { ApSessionsModule } from './ap-sessions/ap-sessions.module';
     ApDeathlinksModule,
     CoreGamesModule,
     ApSessionsModule,
+    ApMessagesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

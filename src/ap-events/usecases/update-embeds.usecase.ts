@@ -1,6 +1,14 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { Channel, Client, EmbedBuilder, TextChannel } from 'discord.js';
+import {
+  Channel,
+  Client,
+  EmbedBuilder,
+  Message,
+  TextChannel,
+} from 'discord.js';
 import { ApGamesService } from 'src/ap-games/ap-games.service';
+import { ApMessages } from 'src/ap-messages/ap-messages.entity';
+import { ApMessagesService } from 'src/ap-messages/ap-messages.service';
 import { ApPlayersService } from 'src/ap-players/ap-players.service';
 import { DiscordError } from 'src/core/discord.error';
 import { ApEvent } from '../ap-events.entity';
@@ -12,6 +20,8 @@ export class UpdateEmbedsUseCase {
     private apPlayersService: ApPlayersService,
     @Inject(forwardRef(() => ApGamesService))
     private apGamesService: ApGamesService,
+    @Inject(forwardRef(() => ApMessagesService))
+    private apMessagesService: ApMessagesService,
     private readonly client: Client,
   ) {}
 
@@ -28,12 +38,10 @@ export class UpdateEmbedsUseCase {
       throw new DiscordError("Le channel n'est pas valide");
     }
 
-    const messages = await channel.messages.fetch();
+    const messages = new Array<Message<boolean>>();
 
-    for (const [, message] of messages) {
-      if (message.author.bot) {
-        await message.delete();
-      }
+    for (const message of event.messages) {
+      messages.push(await channel.messages.fetch(message.message_id));
     }
 
     const playerCount = await this.apPlayersService.countPlayers(event.id);
@@ -69,26 +77,43 @@ export class UpdateEmbedsUseCase {
         );
       }
 
-      const fieldText = lines.join('\n');
-
-      if (
-        embeds[embedId].length + fieldText.length >= 6000 ||
-        fieldCount >= 25
-      ) {
-        embedId++;
-        fieldCount = 0;
-        embeds.push(this.createEmbed(event, playerCount, gameCount));
+      const fieldText = new Array<string>('');
+      for (const line of lines) {
+        let lastIndex = fieldText.length - 1;
+        if (fieldText[lastIndex].length + line.length > 1024) {
+          fieldText.push('');
+          lastIndex++;
+        }
+        fieldText[lastIndex] += `${line}\n`;
       }
 
-      embeds[embedId].addFields({
-        name: player.username,
-        value: fieldText,
-      });
+      for (const field of fieldText) {
+        if (embeds[embedId].length + field.length >= 6000 || fieldCount >= 25) {
+          embedId++;
+          fieldCount = 0;
+          embeds.push(this.createEmbed(event, playerCount, gameCount));
+        }
+
+        embeds[embedId].addFields({
+          name: player.username,
+          value: field,
+        });
+      }
     }
 
-    for (const embed of embeds) {
-      if (channel.isTextBased()) {
-        (channel as TextChannel).send({ embeds: [embed] });
+    for (let i = 0; i < embeds.length; i++) {
+      if (i < messages.length) {
+        await messages[i].edit({ embeds: [embeds[i]] });
+      } else {
+        const messageSended = await (channel as TextChannel).send({
+          embeds: [embeds[i]],
+        });
+        const apMessage = new ApMessages();
+        apMessage.message_id = messageSended.id;
+        apMessage.event = event;
+        event.messages.push(
+          await this.apMessagesService.createMessage(apMessage),
+        );
       }
     }
   }

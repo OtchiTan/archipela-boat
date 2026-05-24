@@ -7,12 +7,17 @@ import {
   type SlashCommandContext,
 } from 'necord';
 import { ApEventsService } from 'src/ap-events/ap-events.service';
+import { ApMessages } from 'src/ap-messages/ap-messages.entity';
+import { ApMessagesService } from 'src/ap-messages/ap-messages.service';
 import { IsNull } from 'typeorm';
 import { SetupApDto } from './dto/setup-ap.dto';
 
 @Injectable()
 export class SetupApCommand {
-  constructor(@Inject() private apEventsService: ApEventsService) {}
+  constructor(
+    @Inject() private apEventsService: ApEventsService,
+    @Inject() private apMessagesService: ApMessagesService,
+  ) {}
 
   @SlashCommand({
     name: 'setup-ap',
@@ -52,8 +57,10 @@ export class SetupApCommand {
     });
 
     if (event !== null) {
-      event.messageId = result.resource?.message?.id;
-      await this.apEventsService.updateEvent(event.id, event);
+      const apMessage = new ApMessages();
+      apMessage.message_id = result.resource?.message?.id ?? '';
+      apMessage.event = event;
+      await this.apMessagesService.createMessage(apMessage);
     }
   }
 }
