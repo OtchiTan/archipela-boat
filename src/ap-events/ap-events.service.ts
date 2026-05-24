@@ -224,6 +224,8 @@ export class ApEventsService implements OnModuleInit {
     stats.eventName = event.name;
     stats.startTime = event.startTime;
     stats.endTime = event.endTime;
+    stats.unknownDeathlinks =
+      await this.apDeathlinksService.getUnknownDeathlinks(event.id);
 
     const playerStatsPromises = event.players.map((player) =>
       this.apPlayersService.getStats(player.id),
@@ -236,9 +238,16 @@ export class ApEventsService implements OnModuleInit {
     stats.deathlink = stats.playersStats.reduce((accumulator, game) => {
       return accumulator + game.deathlink;
     }, 0);
+    stats.deathlink += stats.unknownDeathlinks.length;
     stats.killCount = stats.playersStats.reduce((accumulator, game) => {
       return accumulator + game.killCount;
     }, 0);
+    stats.killCount = stats.unknownDeathlinks.reduce(
+      (accumulator, deathlink) => {
+        return accumulator + deathlink.killCount;
+      },
+      0,
+    );
 
     return stats;
   }
