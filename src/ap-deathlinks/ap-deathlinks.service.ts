@@ -28,7 +28,7 @@ export class ApDeathlinksService {
   ): Promise<ApDeathlink | null> {
     return await this.apDeathlinkRepository.findOne({
       where: filter,
-      relations: { game: true },
+      relations: { game: true, event: true },
     });
   }
 
