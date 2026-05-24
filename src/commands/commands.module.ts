@@ -8,6 +8,7 @@ import { GetFilesCommand } from './get-files.command';
 import { RegisterAdminCommand } from './register-admin.command';
 import { RegisterCommand } from './register.command';
 import { SetupApCommand } from './setup-ap.command';
+import { SetupLogsCommand } from './setup-logs.command';
 import { StartApCommand } from './start-ap.command';
 import { UnregisterCommand } from './unregister.command';
 import { UpdateMessageCommand } from './update-message.command';
@@ -29,6 +30,7 @@ import { UpdateMessageCommand } from './update-message.command';
     GetFilesCommand,
     CloseApCommand,
     UpdateMessageCommand,
+    SetupLogsCommand,
   ],
 })
 export class CommandsModule {}

@@ -21,6 +21,9 @@ export class ApEvent {
   channelId!: string;
 
   @Column({ nullable: true })
+  logChannelId?: string;
+
+  @Column({ nullable: true })
   url?: string;
 
   @Column({ nullable: true })

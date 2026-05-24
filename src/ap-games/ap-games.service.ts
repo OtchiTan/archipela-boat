@@ -9,7 +9,6 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { createReadStream, existsSync, mkdirSync, writeFileSync } from 'fs';
 import { basename, join } from 'path';
-import { ApDeathlink } from 'src/ap-deathlinks/ap-deathlinks.entity';
 import { ApDeathlinksService } from 'src/ap-deathlinks/ap-deathlinks.service';
 import { ApEvent } from 'src/ap-events/ap-events.entity';
 import { ApEventsService } from 'src/ap-events/ap-events.service';
@@ -23,6 +22,7 @@ import { IsNull, Repository } from 'typeorm';
 import { stringify as yamlStringify } from 'yaml';
 import { ApGame } from './ap-games.entity';
 import { GameStatsDto } from './dto/game-stats.dto';
+import { IncreaseDeathlinkCountUseCase } from './usecases/increase-deathlink-count.usecase';
 import { RegisterGameUseCase } from './usecases/register-game.usecase';
 
 @Injectable()
@@ -38,6 +38,8 @@ export class ApGamesService {
     private apDeathlinksService: ApDeathlinksService,
     @Inject(forwardRef(() => ApSessionsService))
     private apSessionsService: ApSessionsService,
+    @Inject()
+    private increaseDeathlinkCountUseCase: IncreaseDeathlinkCountUseCase,
     @Inject() private readonly registerGameUseGame: RegisterGameUseCase,
   ) {}
 
@@ -115,30 +117,6 @@ export class ApGamesService {
     }
 
     return game;
-  }
-
-  public async increaseDeathlinkCount(
-    event: ApEvent,
-    slot: string,
-    timestamp: number,
-    cause?: string,
-  ): Promise<void> {
-    const game = await this.findOne({
-      slot,
-      event,
-    });
-
-    if (game === null) {
-      throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
-    }
-
-    const apDeathlink = new ApDeathlink();
-    apDeathlink.game = game;
-    apDeathlink.timestamp = new Date(timestamp);
-    apDeathlink.cause = cause;
-    apDeathlink.killCount =
-      await this.apSessionsService.countDeathlinkKillcount(event.id);
-    await this.apDeathlinksService.create(apDeathlink);
   }
 
   public async startSession(event: ApEvent, slot: string, deathlink: boolean) {
@@ -277,5 +255,19 @@ export class ApGamesService {
       await this.apDeathlinksService.countDeathlinkKillCount(gameId);
 
     return playtime;
+  }
+
+  async increaseDeathlinkCount(
+    event: ApEvent,
+    slot: string,
+    timestamp: number,
+    cause: string | undefined,
+  ) {
+    await this.increaseDeathlinkCountUseCase.increaseDeathlinkCount(
+      event,
+      slot,
+      timestamp,
+      cause,
+    );
   }
 }

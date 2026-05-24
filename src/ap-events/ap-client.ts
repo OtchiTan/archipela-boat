@@ -3,6 +3,7 @@ import { ApDeathlinksService } from 'src/ap-deathlinks/ap-deathlinks.service';
 import { ApEventsService } from 'src/ap-events/ap-events.service';
 import { ApGamesService } from 'src/ap-games/ap-games.service';
 import { DiscordError } from 'src/core/discord.error';
+import { IsNull } from 'typeorm';
 import { ApEvent } from './ap-events.entity';
 
 export class ApClient {
@@ -17,7 +18,9 @@ export class ApClient {
   ) {}
 
   async connectClient(url: string) {
-    this.event = (await this.apEventsService.findEvent({ url })) ?? undefined;
+    this.event =
+      (await this.apEventsService.findEvent({ url, endTime: IsNull() })) ??
+      undefined;
 
     if (this.event === undefined) {
       throw new DiscordError(

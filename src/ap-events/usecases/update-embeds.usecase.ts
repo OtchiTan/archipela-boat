@@ -26,6 +26,10 @@ export class UpdateEmbedsUseCase {
   ) {}
 
   public async updateMessageEmbeds(event: ApEvent) {
+    if (!this.client.isReady()) {
+      return;
+    }
+
     let channel: Channel | null;
     try {
       channel = await this.client.channels.fetch(event.channelId);

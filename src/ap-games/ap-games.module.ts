@@ -9,6 +9,7 @@ import { CoreGamesModule } from 'src/core-games/core-games.module';
 import { ApGamesController } from './ap-games.controller';
 import { ApGame } from './ap-games.entity';
 import { ApGamesService } from './ap-games.service';
+import { IncreaseDeathlinkCountUseCase } from './usecases/increase-deathlink-count.usecase';
 import { RegisterGameUseCase } from './usecases/register-game.usecase';
 
 @Module({
@@ -22,7 +23,11 @@ import { RegisterGameUseCase } from './usecases/register-game.usecase';
     CoreGamesModule,
   ],
   controllers: [ApGamesController],
-  providers: [ApGamesService, RegisterGameUseCase],
+  providers: [
+    ApGamesService,
+    RegisterGameUseCase,
+    IncreaseDeathlinkCountUseCase,
+  ],
   exports: [ApGamesService],
 })
 export class ApGamesModule {}
