@@ -99,7 +99,7 @@ export class ApEventsService implements OnModuleInit {
       url: undefined,
     });
 
-    this.closeApClient(event.url ?? '');
+    await this.closeApClient(event.url ?? '');
   }
 
   public async startAp(channelId: string, startApDto: StartApDto) {
@@ -141,10 +141,12 @@ export class ApEventsService implements OnModuleInit {
     await apClient.connectClient(url);
   }
 
-  closeApClient(url: string) {
+  async closeApClient(url: string) {
     const apClient = this.apClients.get(url);
 
     if (apClient) {
+      await apClient?.disconnectClient();
+
       this.apClients.delete(url);
     }
   }

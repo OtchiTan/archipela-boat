@@ -59,7 +59,6 @@ export class UpdateEmbedsUseCase {
     let fieldCount = 0;
 
     for (const player of players) {
-      fieldCount++;
       const lines = new Array<string>();
 
       for (const game of player.games) {
@@ -77,17 +76,18 @@ export class UpdateEmbedsUseCase {
         );
       }
 
-      const fieldText = new Array<string>('');
+      const playerFields = new Array<string>('');
       for (const line of lines) {
-        let lastIndex = fieldText.length - 1;
-        if (fieldText[lastIndex].length + line.length > 1024) {
-          fieldText.push('');
+        let lastIndex = playerFields.length - 1;
+        if (playerFields[lastIndex].length + line.length > 1024) {
+          playerFields.push('');
           lastIndex++;
         }
-        fieldText[lastIndex] += `${line}\n`;
+        playerFields[lastIndex] += `${line}\n`;
       }
 
-      for (const field of fieldText) {
+      for (const field of playerFields) {
+        fieldCount++;
         if (embeds[embedId].length + field.length >= 6000 || fieldCount >= 25) {
           embedId++;
           fieldCount = 0;
