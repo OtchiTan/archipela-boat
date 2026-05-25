@@ -18,7 +18,10 @@ export class ApDeathlinksService {
     getDeathlinksDto: getDeathlinksDto,
   ): Promise<ApDeathlink[]> {
     return await this.apDeathlinkRepository.find({
-      where: { game: { event: { id: getDeathlinksDto.eventId } } },
+      where: [
+        { game: { event: { id: getDeathlinksDto.eventId } } },
+        { game: IsNull() },
+      ],
       relations: { game: { player: true } },
     });
   }

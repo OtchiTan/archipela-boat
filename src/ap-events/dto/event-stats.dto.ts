@@ -1,5 +1,4 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { ApDeathlink } from 'src/ap-deathlinks/ap-deathlinks.entity';
 import { PlayerStatsDto } from 'src/ap-players/dto/player-stats.dto';
 
 export class EventStatsDto {
@@ -26,7 +25,4 @@ export class EventStatsDto {
 
   @ApiProperty()
   killCount: number = 0;
-
-  @ApiProperty()
-  unknownDeathlinks: ApDeathlink[] = [];
 }

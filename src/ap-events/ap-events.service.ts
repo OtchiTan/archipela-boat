@@ -20,6 +20,7 @@ import { basename, join } from 'path';
 import { ApDeathlinksService } from 'src/ap-deathlinks/ap-deathlinks.service';
 import { ApGamesService } from 'src/ap-games/ap-games.service';
 import { ApPlayersService } from 'src/ap-players/ap-players.service';
+import { PlayerStatsDto } from 'src/ap-players/dto/player-stats.dto';
 import { StartApDto } from 'src/commands/dto/start-ap.dto';
 import { DiscordError } from 'src/core/discord.error';
 import { FindOptionsWhere, IsNull, Not, Repository } from 'typeorm';
@@ -224,30 +225,42 @@ export class ApEventsService implements OnModuleInit {
     stats.eventName = event.name;
     stats.startTime = event.startTime;
     stats.endTime = event.endTime;
-    stats.unknownDeathlinks =
+
+    const unknownDeathlinks =
       await this.apDeathlinksService.getUnknownDeathlinks(event.id);
+
+    const unknownPlayerStats = new Map<string, PlayerStatsDto>();
+    for (const deathlink of unknownDeathlinks) {
+      let stat = unknownPlayerStats.get(deathlink.slot);
+      if (!stat) {
+        stat = new PlayerStatsDto();
+        stat.playerName = deathlink.slot;
+      }
+      stat.deathlink++;
+      stat.killCount += deathlink.killCount;
+
+      unknownPlayerStats.set(deathlink.slot, stat);
+    }
 
     const playerStatsPromises = event.players.map((player) =>
       this.apPlayersService.getStats(player.id),
     );
 
     stats.playersStats = await Promise.all(playerStatsPromises);
+
+    for (const [, stat] of unknownPlayerStats) {
+      stats.playersStats.push(stat);
+    }
+
     stats.playtime = stats.playersStats.reduce((accumulator, game) => {
       return accumulator + game.playtime;
     }, 0);
     stats.deathlink = stats.playersStats.reduce((accumulator, game) => {
       return accumulator + game.deathlink;
     }, 0);
-    stats.deathlink += stats.unknownDeathlinks.length;
     stats.killCount = stats.playersStats.reduce((accumulator, game) => {
       return accumulator + game.killCount;
     }, 0);
-    stats.killCount = stats.unknownDeathlinks.reduce(
-      (accumulator, deathlink) => {
-        return accumulator + deathlink.killCount;
-      },
-      0,
-    );
 
     return stats;
   }
