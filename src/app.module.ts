@@ -23,8 +23,14 @@ import { CoreGamesModule } from './core-games/core-games.module';
       development: [process.env.DISCORD_DEVELOPMENT_GUILD_ID ?? ''],
     }),
     TypeOrmModule.forRoot({
-      type: 'sqlite',
-      database: '.db/archipela-boat.db',
+      type: 'postgres',
+      database: process.env.POSTGRES_DB,
+      host: process.env.POSTGRES_HOST,
+      port: process.env.POSTGRES_PORT
+        ? Number(process.env.POSTGRES_PORT)
+        : 5432,
+      password: process.env.POSTGRES_PASSWORD,
+      username: process.env.POSTGRES_USER,
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: true,
     }),
