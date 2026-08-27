@@ -1,29 +1,31 @@
-version: '3'
 services:
   archipe-boat:
     build:
       context: .
       dockerfile: Dockerfile
-    ports:
-      - 80:3000
     env_file:
       - .env
     restart: always
     image: archipela-boat
     networks:
       - traefik_frontend
-      - postgres
+      - postgres_db
     labels:
       - traefik.enable=true
-      - traefik.http.routers.archipela-boat.rule=Host(`archipel-uqac.otchi.ovh/api`)
+      - traefik.docker.network=traefik_frontend
       - traefik.http.routers.archipela-boat.entrypoints=web
-      - traefik.http.routers.archipela-boat-https.rule=Host(`archipel-uqac.otchi.ovh/api`)
+      - traefik.http.routers.archipela-boat.rule=Host(`archipeluqac.otchi.ovh`) && PathPrefix(`/api`)
+      - traefik.http.routers.archipela-boat.priority=100
       - traefik.http.routers.archipela-boat-https.entrypoints=websecure
+      - traefik.http.routers.archipela-boat-https.rule=Host(`archipeluqac.otchi.ovh`) && PathPrefix(`/api`)
       - traefik.http.routers.archipela-boat-https.tls=true
       - traefik.http.routers.archipela-boat-https.tls.certresolver=ovhcloud
+      - traefik.http.routers.archipela-boat-https.priority=100
+      - traefik.http.services.archipela-boat.loadbalancer.server.port=3000
+
 
 networks:
   traefik_frontend:
-    - external: true
-  postgres:
-    - external: true
+      external: true
+  postgres_db:
+      external: true

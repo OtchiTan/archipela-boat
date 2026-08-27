@@ -8,6 +8,9 @@ async function bootstrap() {
     logger: new ConsoleLogger({}),
     cors: true,
   });
+
+  app.setGlobalPrefix("api");
+
   const config = new DocumentBuilder()
     .setTitle('Cats example')
     .setDescription('The cats API description')
