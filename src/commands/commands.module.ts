@@ -2,8 +2,10 @@ import { forwardRef, Module } from '@nestjs/common';
 import { ApEventsModule } from 'src/ap-events/ap-events.module';
 import { ApGamesModule } from 'src/ap-games/ap-games.module';
 import { ApMessagesModule } from 'src/ap-messages/ap-messages.module';
+import { ApSessionsModule } from 'src/ap-sessions/ap-sessions.module';
 import { ClearMessagesCommand } from './clear-messages.command';
 import { CloseApCommand } from './close-ap.command';
+import { DeathlinkCommand } from './deathlink.command';
 import { GetFilesCommand } from './get-files.command';
 import { RegisterAdminCommand } from './register-admin.command';
 import { RegisterCommand } from './register.command';
@@ -18,6 +20,7 @@ import { UpdateMessageCommand } from './update-message.command';
     forwardRef(() => ApEventsModule),
     forwardRef(() => ApGamesModule),
     forwardRef(() => ApMessagesModule),
+    forwardRef(() => ApSessionsModule),
   ],
   controllers: [],
   providers: [
@@ -31,6 +34,7 @@ import { UpdateMessageCommand } from './update-message.command';
     CloseApCommand,
     UpdateMessageCommand,
     SetupLogsCommand,
+    DeathlinkCommand,
   ],
 })
 export class CommandsModule {}
