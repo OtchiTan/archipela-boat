@@ -29,10 +29,12 @@ export class ApClient {
     }
 
     try {
+      console.log("Login");
       await this.client.login(url, this.event.games[0].slot ?? '', '', {
         tags: ['AP', 'Tracker', 'DeathLink'],
       });
-    } catch {
+    } catch (error) {
+      console.error(error);
       this.reconnectClient(url).catch((err) => console.error(err));
       return;
     }

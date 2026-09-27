@@ -10,6 +10,8 @@ services:
     networks:
       - traefik_frontend
       - postgres_db
+    volumes:
+      - .tmp/:/usr/src/app/.tmp
     labels:
       - traefik.enable=true
       - traefik.docker.network=traefik_frontend

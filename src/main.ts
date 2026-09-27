@@ -1,9 +1,14 @@
 import { ConsoleLogger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { WebSocket } from 'ws';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
+  if (!global.WebSocket) {
+    (global as any).WebSocket = WebSocket
+  }
+
   const app = await NestFactory.create(AppModule, {
     logger: new ConsoleLogger({}),
     cors: true,

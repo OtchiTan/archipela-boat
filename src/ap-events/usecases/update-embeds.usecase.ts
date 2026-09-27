@@ -30,6 +30,8 @@ export class UpdateEmbedsUseCase {
       return;
     }
 
+    console.log("Update Message Embeds")
+
     let channel: Channel | null;
     try {
       channel = await this.client.channels.fetch(event.channelId);

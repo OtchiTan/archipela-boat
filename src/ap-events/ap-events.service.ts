@@ -153,7 +153,11 @@ export class ApEventsService implements OnModuleInit {
   }
 
   public async updateEmbeds(event: ApEvent) {
-    await this.updateEmbedsUseCase.updateMessageEmbeds(event);
+    try {
+      await this.updateEmbedsUseCase.updateMessageEmbeds(event);
+    } catch (error) {
+      console.error(error);
+    }
   }
 
   public async getEventFiles(eventId: number) {
