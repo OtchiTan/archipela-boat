@@ -30,7 +30,7 @@ export class UpdateEmbedsUseCase {
       return;
     }
 
-    console.log("Update Message Embeds")
+    console.log('Update Message Embeds');
 
     let channel: Channel | null;
     try {

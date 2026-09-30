@@ -7,6 +7,7 @@ import {
   StreamableFile,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Channel, Client, EmbedBuilder, TextChannel } from 'discord.js';
 import { createReadStream, existsSync, mkdirSync, writeFileSync } from 'fs';
 import { basename, join } from 'path';
 import { ApDeathlinksService } from 'src/ap-deathlinks/ap-deathlinks.service';
@@ -25,6 +26,13 @@ import { GameStatsDto } from './dto/game-stats.dto';
 import { IncreaseDeathlinkCountUseCase } from './usecases/increase-deathlink-count.usecase';
 import { RegisterGameUseCase } from './usecases/register-game.usecase';
 
+type JsonPrimitive = string | number | boolean | null;
+type JsonValue = JsonPrimitive | JsonObject | JsonArray;
+type JsonArray = JsonValue[];
+interface JsonObject {
+  [key: string]: JsonValue;
+}
+
 @Injectable()
 export class ApGamesService {
   constructor(
@@ -41,6 +49,7 @@ export class ApGamesService {
     @Inject()
     private increaseDeathlinkCountUseCase: IncreaseDeathlinkCountUseCase,
     @Inject() private readonly registerGameUseGame: RegisterGameUseCase,
+    private readonly client: Client,
   ) {}
 
   async findOne(game: Partial<ApGame>): Promise<ApGame | null> {
@@ -166,7 +175,7 @@ export class ApGamesService {
     userId: string,
     userDisplayName: string,
   ) {
-    await this.registerGameUseGame.registerGame(
+    const apGame = await this.registerGameUseGame.registerGame(
       registerDto,
       channelId,
       userId,
@@ -185,6 +194,130 @@ export class ApGamesService {
     }
 
     this.apEventsService.updateEmbeds(event).catch((err) => console.error(err));
+
+    if (event.adminLogChannelId === undefined) {
+      return;
+    }
+
+    let channel: Channel | null;
+    try {
+      channel = await this.client.channels.fetch(event.adminLogChannelId);
+    } catch {
+      console.error('Aucun channel admin défini');
+      return;
+    }
+
+    if (!channel || !channel.isTextBased()) {
+      console.error('Aucun channel admin défini');
+      return;
+    }
+
+    const deathlink = this.checkDeathlink(apGame.yaml);
+
+    await (channel as TextChannel).send({
+      embeds: [
+        new EmbedBuilder()
+          .setTitle('Nouveau jeu enregistré')
+          .setDescription(`👥 ${apGame.player.username} - 🎮 ${apGame.name}`)
+          .addFields({
+            name: apGame.slot,
+            value: `[YAML](${process.env.APP_URL}/ap-games/${apGame.id}/yaml)`,
+          })
+          .addFields({
+            name: 'Deathlink ?',
+            value: deathlink,
+          }),
+      ],
+    });
+  }
+
+  parseDeathlinkValue(value: JsonValue): string {
+    if (value === null || value === undefined) {
+      return ':interrobang: Incertain';
+    }
+
+    if (typeof value === 'boolean') {
+      return value ? '✅ Activé' : ':x: Desactivé';
+    }
+
+    if (typeof value === 'number') {
+      if (value === 0) return ':x: Desactivé';
+      if (value > 0) return '✅ Activé';
+      return ':interrobang: Incertain';
+    }
+
+    if (typeof value === 'string') {
+      const normalized = value.trim().toLowerCase();
+
+      const disabledValues = [
+        'false',
+        'off',
+        '0',
+        'disabled',
+        'none',
+        'no',
+        'false_death',
+      ];
+      if (disabledValues.includes(normalized)) {
+        return ':x: Desactivé';
+      }
+
+      if (normalized.length > 0) {
+        return '✅ Activé';
+      }
+    }
+
+    return ':interrobang: Incertain';
+  }
+
+  findDeathlinkInStructure(data: JsonValue): string {
+    if (typeof data !== 'object' || data === null) {
+      return ':interrobang: Incertain';
+    }
+
+    if (Array.isArray(data)) {
+      for (const item of data) {
+        const result = this.findDeathlinkInStructure(item);
+        if (result !== ':interrobang: Incertain') return result;
+      }
+      return ':interrobang: Incertain';
+    }
+
+    for (const [key, value] of Object.entries(data)) {
+      const normalizedKey = key.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+      if (normalizedKey.includes('deathlink')) {
+        const result = this.parseDeathlinkValue(value);
+        if (result !== ':interrobang: Incertain') {
+          return result;
+        }
+      }
+
+      if (typeof value === 'object' && value !== null) {
+        const nestedResult = this.findDeathlinkInStructure(value);
+        if (nestedResult !== 'Incertain') {
+          return nestedResult;
+        }
+      }
+    }
+
+    return ':interrobang: Incertain';
+  }
+
+  public checkDeathlink(input: JsonValue | string): string {
+    let parsedData: JsonValue;
+
+    if (typeof input === 'string') {
+      try {
+        parsedData = JSON.parse(input) as JsonValue;
+      } catch {
+        return ':interrobang: Incertain';
+      }
+    } else {
+      parsedData = input;
+    }
+
+    return this.findDeathlinkInStructure(parsedData);
   }
 
   public async unregisterGame(

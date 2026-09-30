@@ -33,7 +33,7 @@ export class RegisterGameUseCase {
     channelId: string,
     userId: string,
     userDisplayName: string,
-  ) {
+  ): Promise<ApGame> {
     if (!registerDto.yaml.name.endsWith('.yaml')) {
       throw new DiscordError(
         "Le fichier fourni n'est pas un fichier yaml. Veuillez fournir un fichier yaml.",
@@ -139,5 +139,7 @@ export class RegisterGameUseCase {
 
       apGame = await this.apGamesService.create(apGame);
     }
+
+    return apGame;
   }
 }

@@ -9,6 +9,7 @@ import { DeathlinkCommand } from './deathlink.command';
 import { GetFilesCommand } from './get-files.command';
 import { RegisterAdminCommand } from './register-admin.command';
 import { RegisterCommand } from './register.command';
+import { SetupAdminLogsCommand } from './setup-admin-logs.command';
 import { SetupApCommand } from './setup-ap.command';
 import { SetupLogsCommand } from './setup-logs.command';
 import { StartApCommand } from './start-ap.command';
@@ -34,6 +35,7 @@ import { UpdateMessageCommand } from './update-message.command';
     CloseApCommand,
     UpdateMessageCommand,
     SetupLogsCommand,
+    SetupAdminLogsCommand,
     DeathlinkCommand,
   ],
 })
