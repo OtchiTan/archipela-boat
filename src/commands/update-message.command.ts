@@ -2,7 +2,6 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Context, SlashCommand, type SlashCommandContext } from 'necord';
 import { ApEventsService } from 'src/ap-events/ap-events.service';
 import { DiscordError } from 'src/core/discord.error';
-import { IsNull } from 'typeorm';
 
 @Injectable()
 export class UpdateMessageCommand {
@@ -18,7 +17,6 @@ export class UpdateMessageCommand {
     try {
       const event = await this.apEventsService.findEvent({
         channelId: interaction.channelId,
-        endTime: IsNull(),
       });
 
       if (event === null) {
