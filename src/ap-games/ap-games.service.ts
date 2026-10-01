@@ -19,7 +19,7 @@ import { ApSessionsService } from 'src/ap-sessions/ap-sessions.service';
 import { RegisterDto } from 'src/commands/dto/register.dto';
 import { UnregisterDto } from 'src/commands/dto/unregister.dto';
 import { DiscordError } from 'src/core/discord.error';
-import { IsNull, Repository } from 'typeorm';
+import { FindOptionsWhere, IsNull, Repository } from 'typeorm';
 import { stringify as yamlStringify } from 'yaml';
 import { ApGame } from './ap-games.entity';
 import { GameStatsDto } from './dto/game-stats.dto';
@@ -55,6 +55,13 @@ export class ApGamesService {
   async findOne(game: Partial<ApGame>): Promise<ApGame | null> {
     return await this.apGameRepository.findOne({
       where: { ...game, event: { id: game.event?.id } },
+      relations: { event: true, player: true },
+    });
+  }
+
+  async findAll(filter: FindOptionsWhere<ApGame>): Promise<ApGame[]> {
+    return await this.apGameRepository.find({
+      where: filter,
       relations: { event: true, player: true },
     });
   }
