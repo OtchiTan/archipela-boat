@@ -22,6 +22,9 @@ export class ApEvent {
   channelId!: string;
 
   @Column({ nullable: true })
+  guildId!: string;
+
+  @Column({ nullable: true })
   logChannelId?: string;
 
   @Column({ nullable: true })

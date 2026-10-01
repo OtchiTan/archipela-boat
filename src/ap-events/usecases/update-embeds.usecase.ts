@@ -78,7 +78,7 @@ export class UpdateEmbedsUseCase {
         }
 
         lines.push(
-          `${game.name} - [YAML](${process.env.APP_URL}/ap-games/${game.id}/yaml) ✅ - ${apWorld}`,
+          `${game.name} - [${game.slot}](${process.env.APP_URL}/ap-games/${game.id}/yaml) ✅ - ${apWorld}`,
         );
       }
 

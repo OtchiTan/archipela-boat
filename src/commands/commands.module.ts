@@ -7,6 +7,7 @@ import { ClearMessagesCommand } from './clear-messages.command';
 import { CloseApCommand } from './close-ap.command';
 import { DeathlinkCommand } from './deathlink.command';
 import { GetFilesCommand } from './get-files.command';
+import { PingCommand } from './ping.command';
 import { RegisterAdminCommand } from './register-admin.command';
 import { RegisterCommand } from './register.command';
 import { SetupAdminLogsCommand } from './setup-admin-logs.command';
@@ -37,6 +38,7 @@ import { UpdateMessageCommand } from './update-message.command';
     SetupLogsCommand,
     SetupAdminLogsCommand,
     DeathlinkCommand,
+    PingCommand,
   ],
 })
 export class CommandsModule {}

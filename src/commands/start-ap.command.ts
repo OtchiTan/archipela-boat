@@ -31,17 +31,21 @@ export class StartApCommand {
         content: "L'êvenement à démarré",
       });
     } catch (error) {
-      if (error instanceof DiscordError) {
+      try {
+        if (error instanceof DiscordError) {
+          return await interaction.reply({
+            flags: 'Ephemeral',
+            content: error.message,
+          });
+        }
+        this.logger.error(error);
         return await interaction.reply({
           flags: 'Ephemeral',
-          content: error.message,
+          content: 'Euh... cpt',
         });
+      } catch (e) {
+        console.error(e);
       }
-      this.logger.error(error);
-      return await interaction.reply({
-        flags: 'Ephemeral',
-        content: 'Euh... cpt',
-      });
     }
   }
 }

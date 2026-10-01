@@ -86,8 +86,12 @@ export class ApEventsService implements OnModuleInit {
     this.updateEmbeds(event).catch((err) => console.error(err));
   }
 
-  public async stopAp(channelId: string) {
-    const event = await this.findEvent({ channelId, endTime: IsNull() });
+  public async stopAp(guildId: string, channelId: string) {
+    const event = await this.findEvent({
+      guildId,
+      channelId,
+      endTime: IsNull(),
+    });
 
     if (event === null) {
       throw new DiscordError(
@@ -133,6 +137,8 @@ export class ApEventsService implements OnModuleInit {
   }
 
   async startNewApClient(url: string) {
+    await this.closeApClient(url);
+
     const apClient = new ApClient(
       this,
       this.apDeathlinksService,

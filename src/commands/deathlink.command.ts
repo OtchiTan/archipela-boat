@@ -2,6 +2,7 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { Context, SlashCommand, type SlashCommandContext } from 'necord';
 import { ApEventsService } from 'src/ap-events/ap-events.service';
 import { ApSessionsService } from 'src/ap-sessions/ap-sessions.service';
+import { IsNull, Not } from 'typeorm';
 
 @Injectable()
 export class DeathlinkCommand {
@@ -18,8 +19,17 @@ export class DeathlinkCommand {
       'Compte le nombre de personne jouant actuellement avec le deathlink',
   })
   public async onPing(@Context() [interaction]: SlashCommandContext) {
+    if (interaction.guildId === null) {
+      return await interaction.reply({
+        flags: 'Ephemeral',
+        content: 'Cette commande doit être executé sur un serveur discord',
+      });
+    }
+
     const apEvent = await this.apEventsService.findEvent({
-      logChannelId: interaction.channelId,
+      guildId: interaction.guildId,
+      startTime: Not(IsNull()),
+      endTime: IsNull(),
     });
 
     if (!apEvent) {

@@ -403,4 +403,13 @@ export class ApGamesService {
       cause,
     );
   }
+
+  public async getSlotDiscordId(slot: string) {
+    const game = await this.apGameRepository.find({
+      where: { slot },
+      relations: { player: true },
+    });
+
+    return game[0].player.discord_id;
+  }
 }

@@ -29,7 +29,7 @@ export class ApClient {
     }
 
     try {
-      console.log("Login");
+      console.log('Login');
       await this.client.login(url, this.event.games[0].slot ?? '', '', {
         tags: ['AP', 'Tracker', 'DeathLink'],
       });
@@ -52,6 +52,7 @@ export class ApClient {
     });
 
     this.client.deathLink.on('deathReceived', (slot, timestamp, cause) => {
+      console.log('On Deathlink received');
       this.onDeathlinkReceived(slot, timestamp, cause).catch((err) =>
         console.error(err),
       );

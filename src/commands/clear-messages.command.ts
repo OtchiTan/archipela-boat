@@ -13,7 +13,10 @@ export class ClearMessagesCommand {
   public async onRegister(@Context() [interaction]: SlashCommandContext) {
     const messages = await interaction.channel?.messages.fetch({});
     if (!messages) {
-      return;
+      return await interaction.reply({
+        flags: 'Ephemeral',
+        content: 'ptdr c pt',
+      });
     }
 
     for (const [, message] of messages) {

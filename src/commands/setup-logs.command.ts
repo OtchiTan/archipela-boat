@@ -1,13 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
-import {
-  Context,
-  Options,
-  SlashCommand,
-  type SlashCommandContext,
-} from 'necord';
+import { Context, SlashCommand, type SlashCommandContext } from 'necord';
 import { ApEventsService } from 'src/ap-events/ap-events.service';
 import { IsNull } from 'typeorm';
-import { SetupLogsDto } from './dto/setup-logs.dto';
 
 @Injectable()
 export class SetupLogsCommand {
@@ -18,12 +12,16 @@ export class SetupLogsCommand {
     description: "Défini le channel de logs de l'évènement",
     defaultMemberPermissions: 'Administrator',
   })
-  public async onSetupLogs(
-    @Context() [interaction]: SlashCommandContext,
-    @Options() options: SetupLogsDto,
-  ) {
+  public async onSetupLogs(@Context() [interaction]: SlashCommandContext) {
+    if (interaction.guildId === null) {
+      return await interaction.reply({
+        flags: 'Ephemeral',
+        content: 'Cette commande doit être executé sur un serveur discord',
+      });
+    }
+
     const event = await this.apEventsService.findEvent({
-      name: options.name,
+      guildId: interaction.guildId,
       endTime: IsNull(),
     });
 

@@ -28,20 +28,28 @@ export class SetupApCommand {
     @Context() [interaction]: SlashCommandContext,
     @Options() options: SetupApDto,
   ) {
+    if (interaction.guildId === null) {
+      return await interaction.reply({
+        flags: 'Ephemeral',
+        content: 'Cette commande doit être executé sur un serveur discord',
+      });
+    }
+
     const alreadyExistingEvent = await this.apEventsService.findEvent({
-      channelId: interaction.channelId,
+      guildId: interaction.guildId,
       endTime: IsNull(),
     });
 
     if (alreadyExistingEvent) {
       return await interaction.reply({
         flags: 'Ephemeral',
-        content: 'Un événement à déjà commencé dans ce channel',
+        content: 'Un événement à déjà commencé sur ce serveur',
       });
     }
 
     const event = await this.apEventsService.createEvent({
       channelId: interaction.channelId,
+      guildId: interaction.guildId,
       name: options.name,
     });
 

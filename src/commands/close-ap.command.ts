@@ -14,8 +14,18 @@ export class CloseApCommand {
     defaultMemberPermissions: 'Administrator',
   })
   public async onStopAp(@Context() [interaction]: SlashCommandContext) {
+    if (interaction.guildId === null) {
+      return await interaction.reply({
+        flags: 'Ephemeral',
+        content: 'Cette commande doit être executé sur un serveur discord',
+      });
+    }
+
     try {
-      await this.apEventsService.stopAp(interaction.channelId);
+      await this.apEventsService.stopAp(
+        interaction.guildId,
+        interaction.channelId,
+      );
 
       return await interaction.reply({
         flags: 'Ephemeral',
