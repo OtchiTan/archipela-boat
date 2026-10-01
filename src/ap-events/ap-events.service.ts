@@ -133,10 +133,10 @@ export class ApEventsService implements OnModuleInit {
       startTime: event.startTime ?? new Date(),
     });
 
-    await this.startNewApClient(startApDto.url);
+    await this.startNewApClient(startApDto.url, true);
   }
 
-  async startNewApClient(url: string) {
+  async startNewApClient(url: string, reportConnectionFailure = false) {
     await this.closeApClient(url);
 
     const apClient = new ApClient(
@@ -145,7 +145,7 @@ export class ApEventsService implements OnModuleInit {
       this.apGamesService,
     );
     this.apClients.set(url, apClient);
-    await apClient.connectClient(url);
+    await apClient.connectClient(url, reportConnectionFailure);
   }
 
   async closeApClient(url: string) {

@@ -54,8 +54,6 @@ export class HintsCommand {
 
     await interaction.deferReply({});
 
-    console.log(hintsDto);
-
     if (hintsDto.slot !== null) {
       const apGame = await this.apGamesService.findOne({
         event: apEvent,

@@ -11,7 +11,7 @@ import { StartApDto } from './dto/start-ap.dto';
 
 @Injectable()
 export class StartApCommand {
-  private logger: Logger = new Logger('UnregisterCommand');
+  private logger: Logger = new Logger('StartApCommand');
   constructor(@Inject() private apEventsService: ApEventsService) {}
 
   @SlashCommand({
@@ -24,28 +24,29 @@ export class StartApCommand {
     @Options() startApDto: StartApDto,
   ) {
     try {
-      await this.apEventsService.startAp(interaction.channelId, startApDto);
-
-      return await interaction.reply({
-        flags: 'Ephemeral',
-        content: "L'êvenement à démarré",
-      });
+      await interaction.deferReply({ flags: 'Ephemeral' });
     } catch (error) {
-      try {
-        if (error instanceof DiscordError) {
-          return await interaction.reply({
-            flags: 'Ephemeral',
-            content: error.message,
-          });
-        }
+      this.logger.error(error);
+      return;
+    }
+
+    let content: string;
+    try {
+      await this.apEventsService.startAp(interaction.channelId, startApDto);
+      content = "L'événement a démarré";
+    } catch (error) {
+      if (error instanceof DiscordError) {
+        content = error.message;
+      } else {
         this.logger.error(error);
-        return await interaction.reply({
-          flags: 'Ephemeral',
-          content: 'Euh... cpt',
-        });
-      } catch (e) {
-        console.error(e);
+        content = 'Euh... cpt';
       }
+    }
+
+    try {
+      return await interaction.editReply({ content });
+    } catch (error) {
+      this.logger.error(error);
     }
   }
 }

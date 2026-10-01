@@ -17,7 +17,7 @@ export class ApClient {
     private readonly apGamesService: ApGamesService,
   ) {}
 
-  async connectClient(url: string) {
+  async connectClient(url: string, reportConnectionFailure = false) {
     this.event =
       (await this.apEventsService.findEvent({ url, endTime: IsNull() })) ??
       undefined;
@@ -36,6 +36,11 @@ export class ApClient {
     } catch (error) {
       console.error(error);
       this.reconnectClient(url).catch((err) => console.error(err));
+      if (reportConnectionFailure) {
+        throw new DiscordError(
+          "Impossible de se connecter au serveur Archipelago. Vérifiez l'URL et le port ; une nouvelle tentative sera effectuée.",
+        );
+      }
       return;
     }
 
