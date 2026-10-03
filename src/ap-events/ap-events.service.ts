@@ -26,23 +26,23 @@ import { DiscordError } from 'src/core/discord.error';
 import { FindOptionsWhere, IsNull, Not, Repository } from 'typeorm';
 import { QueryDeepPartialEntity } from 'typeorm/browser';
 import { stringify as yamlStringify } from 'yaml';
-import { ApClient } from './ap-client';
+import { ApClientManagerService } from './ap-client-manager.service';
 import { ApEvent } from './ap-events.entity';
 import { EventStatsDto } from './dto/event-stats.dto';
 import { UpdateEmbedsUseCase } from './usecases/update-embeds.usecase';
 
 @Injectable()
 export class ApEventsService implements OnModuleInit {
-  apClients: Map<string, ApClient> = new Map();
-
   constructor(
     @InjectRepository(ApEvent) private apEventRepository: Repository<ApEvent>,
     @Inject(forwardRef(() => ApPlayersService))
     private apPlayersService: ApPlayersService,
-    @Inject(forwardRef(() => ApGamesService))
-    private apGamesService: ApGamesService,
     @Inject(forwardRef(() => ApDeathlinksService))
     private apDeathlinksService: ApDeathlinksService,
+    @Inject(ApClientManagerService)
+    private readonly apClientManager: ApClientManagerService,
+    @Inject(forwardRef(() => ApGamesService))
+    private readonly apGamesService: ApGamesService,
     @Inject() private readonly updateEmbedsUseCase: UpdateEmbedsUseCase,
   ) {}
 
@@ -56,7 +56,7 @@ export class ApEventsService implements OnModuleInit {
     });
 
     for (const event of events) {
-      await this.startNewApClient(event.url!);
+      await this.startNewApClient(event.id);
     }
   }
 
@@ -104,7 +104,7 @@ export class ApEventsService implements OnModuleInit {
       url: undefined,
     });
 
-    await this.closeApClient(event.url ?? '');
+    await this.closeApClient(event.id);
   }
 
   public async startAp(channelId: string, startApDto: StartApDto) {
@@ -122,40 +122,26 @@ export class ApEventsService implements OnModuleInit {
       );
     }
 
-    const apClient = this.apClients.get(event.url ?? '');
-    if (apClient) {
-      await apClient.disconnectClient();
-      this.apClients.delete(event.url ?? '');
-    }
-
     await this.updateEvent(event.id, {
       url: startApDto.url,
       startTime: event.startTime ?? new Date(),
     });
 
-    await this.startNewApClient(startApDto.url, true);
+    await this.startNewApClient(event.id, true);
   }
 
-  async startNewApClient(url: string, reportConnectionFailure = false) {
-    await this.closeApClient(url);
-
-    const apClient = new ApClient(
+  async startNewApClient(eventId: number, reportConnectionFailure = false) {
+    await this.apClientManager.start(
       this,
       this.apDeathlinksService,
       this.apGamesService,
+      eventId,
+      reportConnectionFailure,
     );
-    this.apClients.set(url, apClient);
-    await apClient.connectClient(url, reportConnectionFailure);
   }
 
-  async closeApClient(url: string) {
-    const apClient = this.apClients.get(url);
-
-    if (apClient) {
-      await apClient?.disconnectClient();
-
-      this.apClients.delete(url);
-    }
+  async closeApClient(eventId: number) {
+    await this.apClientManager.stop(eventId);
   }
 
   public async updateEmbeds(event: ApEvent) {

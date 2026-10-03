@@ -4,6 +4,7 @@ import { ApDeathlinksModule } from 'src/ap-deathlinks/ap-deathlinks.module';
 import { ApGamesModule } from 'src/ap-games/ap-games.module';
 import { ApMessagesModule } from 'src/ap-messages/ap-messages.module';
 import { ApPlayersModule } from 'src/ap-players/ap-players.module';
+import { ApClientManagerService } from './ap-client-manager.service';
 import { ApEventsController } from './ap-events.controller';
 import { ApEvent } from './ap-events.entity';
 import { ApEventsGateway } from './ap-events.gateway';
@@ -19,7 +20,12 @@ import { UpdateEmbedsUseCase } from './usecases/update-embeds.usecase';
     forwardRef(() => ApMessagesModule),
   ],
   controllers: [ApEventsController],
-  providers: [ApEventsService, UpdateEmbedsUseCase, ApEventsGateway],
+  providers: [
+    ApEventsService,
+    ApClientManagerService,
+    UpdateEmbedsUseCase,
+    ApEventsGateway,
+  ],
   exports: [ApEventsService, ApEventsGateway],
 })
 export class ApEventsModule {}

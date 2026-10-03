@@ -59,7 +59,7 @@ export class ApEventsGateway implements OnGatewayConnection {
     deathlink: ApDeathlink,
     eventStats: EventStatsDto,
   ) {
-    if (deathlink.event.topDeathlinkRoleId === undefined) return;
+    if (!deathlink.event.topDeathlinkRoleId) return;
 
     const topDeathlinkPlayerStats = eventStats.playersStats.reduce(
       (top, current) => (current.killCount > top.killCount ? current : top),

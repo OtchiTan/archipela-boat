@@ -1,32 +1,60 @@
 import { Client, Player } from 'archipelago.js';
-import { ApDeathlinksService } from 'src/ap-deathlinks/ap-deathlinks.service';
-import { ApEventsService } from 'src/ap-events/ap-events.service';
-import { ApGamesService } from 'src/ap-games/ap-games.service';
 import { DiscordError } from 'src/core/discord.error';
-import { IsNull } from 'typeorm';
+import { FindOptionsWhere, IsNull, Not } from 'typeorm';
+import { QueryDeepPartialEntity } from 'typeorm/browser';
 import { ApEvent } from './ap-events.entity';
+
+export interface ApClientEvents {
+  findEvent(filter: FindOptionsWhere<ApEvent>): Promise<ApEvent | null>;
+  updateEvent(
+    eventId: number,
+    data: QueryDeepPartialEntity<ApEvent>,
+  ): Promise<void>;
+}
+
+export interface ApClientDeathlinks {
+  getLatestDeathlink(eventId: number): Promise<{ timestamp: Date } | null>;
+}
+
+export interface ApClientGames {
+  startSession(event: ApEvent, slot: string, deathlink: boolean): Promise<void>;
+  stopSession(event: ApEvent, slot: string): Promise<void>;
+  increaseDeathlinkCount(
+    event: ApEvent,
+    slot: string,
+    timestamp: number,
+    cause: string | undefined,
+  ): Promise<void>;
+}
 
 export class ApClient {
   public client = new Client();
   public event?: ApEvent;
   public retryTimeout?: NodeJS.Timeout;
+  private stopped = false;
 
   constructor(
-    private readonly apEventsService: ApEventsService,
-    private readonly apDeathlinksService: ApDeathlinksService,
-    private readonly apGamesService: ApGamesService,
+    private readonly apEventsService: ApClientEvents,
+    private readonly apDeathlinksService: ApClientDeathlinks,
+    private readonly apGamesService: ApClientGames,
   ) {}
 
-  async connectClient(url: string, reportConnectionFailure = false) {
+  async connectClient(eventId: number, reportConnectionFailure = false) {
     this.event =
-      (await this.apEventsService.findEvent({ url, endTime: IsNull() })) ??
-      undefined;
+      (await this.apEventsService.findEvent({
+        id: eventId,
+        url: Not(IsNull()),
+        startTime: Not(IsNull()),
+        endTime: IsNull(),
+      })) ?? undefined;
 
-    if (this.event === undefined) {
+    if (this.event === undefined || this.stopped) {
       throw new DiscordError(
         "Il n'y à pas d'êvenement démarré dans ce channel",
       );
     }
+
+    const url = this.event.url!;
 
     try {
       console.log('Login');
@@ -35,7 +63,7 @@ export class ApClient {
       });
     } catch (error) {
       console.error(error);
-      this.reconnectClient(url).catch((err) => console.error(err));
+      this.reconnectClient(eventId).catch((err) => console.error(err));
       if (reportConnectionFailure) {
         throw new DiscordError(
           "Impossible de se connecter au serveur Archipelago. Vérifiez l'URL et le port ; une nouvelle tentative sera effectuée.",
@@ -44,8 +72,9 @@ export class ApClient {
       return;
     }
 
-    if (this.retryTimeout?.hasRef) {
+    if (this.retryTimeout?.hasRef()) {
       clearTimeout(this.retryTimeout);
+      this.retryTimeout = undefined;
     }
 
     await this.apEventsService.updateEvent(this.event.id, {
@@ -53,7 +82,7 @@ export class ApClient {
     });
 
     this.client.socket.on('disconnected', () => {
-      this.reconnectClient(url).catch((err) => console.error(err));
+      this.reconnectClient(eventId).catch((err) => console.error(err));
     });
 
     this.client.deathLink.on('deathReceived', (slot, timestamp, cause) => {
@@ -85,7 +114,7 @@ export class ApClient {
   }
 
   async onClientConnected(text: string, player: Player, tags: string[]) {
-    if (this.event === undefined) {
+    if (this.event === undefined || this.stopped) {
       return;
     }
 
@@ -101,7 +130,7 @@ export class ApClient {
   }
 
   async onClientDisconnected(text: string, player: Player) {
-    if (this.event === undefined) {
+    if (this.event === undefined || this.stopped) {
       return;
     }
 
@@ -118,8 +147,8 @@ export class ApClient {
     );
   }
 
-  async reconnectClient(url: string) {
-    if (!this.event) {
+  async reconnectClient(eventId: number) {
+    if (!this.event || this.stopped) {
       return;
     }
 
@@ -136,26 +165,31 @@ export class ApClient {
     }
 
     this.retryTimeout = setTimeout(() => {
-      this.connectClient(url).catch((err) => console.error(err));
+      if (!this.stopped) {
+        this.connectClient(eventId).catch((err) => console.error(err));
+      }
     }, 3000);
   }
 
   async disconnectClient() {
-    if (!this.event) {
-      return;
-    }
-
-    await this.apEventsService.updateEvent(this.event.id, {
-      clientConnected: false,
-    });
+    this.stopped = true;
 
     if (this.retryTimeout?.hasRef()) {
       clearTimeout(this.retryTimeout);
+      this.retryTimeout = undefined;
+    }
+
+    this.client.socket.disconnect();
+
+    if (this.event) {
+      await this.apEventsService.updateEvent(this.event.id, {
+        clientConnected: false,
+      });
     }
   }
 
   async onDeathlinkReceived(slot: string, timestamp: number, cause?: string) {
-    if (this.event === undefined) {
+    if (this.event === undefined || this.stopped) {
       return;
     }
 

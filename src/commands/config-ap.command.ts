@@ -48,9 +48,13 @@ export class ConfigApCommand {
         topDeathlinkRoleId: options.topDeathlinkRole?.id,
       });
 
-      if (alreadyExistingEvent.url) {
+      if (
+        alreadyExistingEvent.url &&
+        alreadyExistingEvent.startTime &&
+        alreadyExistingEvent.endTime == null
+      ) {
         await this.apEventsService.startNewApClient(
-          alreadyExistingEvent.url,
+          alreadyExistingEvent.id,
           true,
         );
       }
