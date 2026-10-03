@@ -5,10 +5,12 @@ import {
 } from '@nestjs/websockets';
 
 import { forwardRef, Inject } from '@nestjs/common';
+import { Client } from 'discord.js';
 import { Namespace, Socket } from 'socket.io';
 import { ApDeathlink } from 'src/ap-deathlinks/ap-deathlinks.entity';
 import { ApGamesService } from 'src/ap-games/ap-games.service';
 import { ApEventsService } from './ap-events.service';
+import { EventStatsDto } from './dto/event-stats.dto';
 
 @WebSocketGateway({ namespace: 'events' })
 export class ApEventsGateway implements OnGatewayConnection {
@@ -20,6 +22,7 @@ export class ApEventsGateway implements OnGatewayConnection {
     private readonly apEventsService: ApEventsService,
     @Inject(forwardRef(() => ApGamesService))
     private readonly apGamesService: ApGamesService,
+    private readonly client: Client,
   ) {}
 
   async handleConnection(client: Socket) {
@@ -48,5 +51,59 @@ export class ApEventsGateway implements OnGatewayConnection {
     this.namespace
       .to(String(deathlink.event.id))
       .emit('deathlink-top', eventStats, deathlink, game); //FIXME: C'est vraiment dégueu va falloir faire plus propre
+
+    await this.switchTopDeathlinkRole(deathlink, eventStats);
+  }
+
+  public async switchTopDeathlinkRole(
+    deathlink: ApDeathlink,
+    eventStats: EventStatsDto,
+  ) {
+    if (deathlink.event.topDeathlinkRoleId === undefined) return;
+
+    const topDeathlinkPlayerStats = eventStats.playersStats.reduce(
+      (top, current) => (current.killCount > top.killCount ? current : top),
+      eventStats.playersStats[0],
+    );
+
+    if (
+      topDeathlinkPlayerStats.playerDiscordId ===
+      deathlink.event.topDeathlinkOwnerId
+    )
+      return;
+
+    const guild = await this.client.guilds.fetch(deathlink.event.guildId);
+
+    if (!guild) return;
+
+    const role = await guild.roles.fetch(deathlink.event.topDeathlinkRoleId, {
+      force: true,
+    });
+
+    if (!role) {
+      return;
+    }
+
+    if (deathlink.event.topDeathlinkOwnerId) {
+      const oldTopMember = await guild.members.fetch(
+        deathlink.event.topDeathlinkOwnerId,
+      );
+
+      if (oldTopMember) {
+        await oldTopMember.roles.remove(role);
+      }
+    }
+
+    const newTopMember = await guild.members.fetch(
+      topDeathlinkPlayerStats.playerDiscordId,
+    );
+
+    if (newTopMember) {
+      await newTopMember.roles.add(role);
+    }
+
+    await this.apEventsService.updateEvent(deathlink.event.id, {
+      topDeathlinkOwnerId: topDeathlinkPlayerStats.playerDiscordId,
+    });
   }
 }

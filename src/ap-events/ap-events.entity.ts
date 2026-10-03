@@ -42,6 +42,12 @@ export class ApEvent {
   @Column({ default: false })
   clientConnected: boolean = false;
 
+  @Column({ nullable: true })
+  topDeathlinkOwnerId?: string;
+
+  @Column({ nullable: true })
+  topDeathlinkRoleId?: string;
+
   @OneToMany(() => ApMessages, (apMessages) => apMessages.event)
   @JoinColumn()
   messages!: ApMessages[];

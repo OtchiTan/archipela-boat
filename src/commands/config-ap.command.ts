@@ -10,23 +10,23 @@ import { ApEventsService } from 'src/ap-events/ap-events.service';
 import { ApMessages } from 'src/ap-messages/ap-messages.entity';
 import { ApMessagesService } from 'src/ap-messages/ap-messages.service';
 import { IsNull } from 'typeorm';
-import { SetupApDto } from './dto/setup-ap.dto';
+import { ConfigApDto } from './dto/setup-ap.dto';
 
 @Injectable()
-export class SetupApCommand {
+export class ConfigApCommand {
   constructor(
     @Inject() private apEventsService: ApEventsService,
     @Inject() private apMessagesService: ApMessagesService,
   ) {}
 
   @SlashCommand({
-    name: 'setup-ap',
-    description: 'Démarre un paramètres un Archipelago',
+    name: 'config-ap',
+    description: 'Démarre ou paramètres un Archipelago dans ce channel',
     defaultMemberPermissions: 'Administrator',
   })
   public async onSetupAp(
     @Context() [interaction]: SlashCommandContext,
-    @Options() options: SetupApDto,
+    @Options() options: ConfigApDto,
   ) {
     if (interaction.guildId === null) {
       return await interaction.reply({
@@ -41,9 +41,23 @@ export class SetupApCommand {
     });
 
     if (alreadyExistingEvent) {
+      await this.apEventsService.updateEvent(alreadyExistingEvent.id, {
+        name: options.name,
+        logChannelId: options.logsChannel?.id,
+        adminLogChannelId: options.adminLogsChannel?.id,
+        topDeathlinkRoleId: options.topDeathlinkRole?.id,
+      });
+
+      if (alreadyExistingEvent.url) {
+        await this.apEventsService.startNewApClient(
+          alreadyExistingEvent.url,
+          true,
+        );
+      }
+
       return await interaction.reply({
         flags: 'Ephemeral',
-        content: 'Un événement à déjà commencé sur ce serveur',
+        content: "L'évènement à bien été mis à jour",
       });
     }
 
@@ -51,6 +65,9 @@ export class SetupApCommand {
       channelId: interaction.channelId,
       guildId: interaction.guildId,
       name: options.name,
+      logChannelId: options.logsChannel?.id,
+      adminLogChannelId: options.adminLogsChannel?.id,
+      topDeathlinkRoleId: options.topDeathlinkRole?.id,
     });
 
     const result = await interaction.reply({

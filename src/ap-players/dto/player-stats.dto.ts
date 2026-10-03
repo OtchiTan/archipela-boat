@@ -9,6 +9,9 @@ export class PlayerStatsDto {
   playerName!: string;
 
   @ApiProperty()
+  playerDiscordId!: string;
+
+  @ApiProperty()
   gamesStats: GameStatsDto[] = [];
 
   @ApiProperty()

@@ -86,6 +86,7 @@ export class ApPlayersService {
     const stats = new PlayerStatsDto();
     stats.playerId = player.id;
     stats.playerName = player.username;
+    stats.playerDiscordId = player.discord_id;
 
     const gameStatsPromises = player.games.map((game) =>
       this.apGamesService.getStats(game.id),
